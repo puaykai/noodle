@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from models import UserProfile
 
 
 def main(request):
@@ -35,3 +36,13 @@ def my_login(request):
 @login_required
 def my_logout(request):
     logout(request)
+
+@login_required
+def my_account(request):
+    if request.user:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+        except:
+            profile = UserProfile(user=request.user)
+            profile.save()
+
