@@ -13,31 +13,17 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 var NormalAppBar = React.createClass({
 	render: function() {
 		return  (  <AppBar
-    title="Whats For Dinner Today?"
+    title={"Whats for dinner today?"}
     iconElementLeft={<IconButton><NavigationClose /></IconButton>}
     iconElementRight={
-      <IconMenu
-        iconButtonElement={
-          <IconButton><MoreVertIcon /></IconButton>
-        }
-        targetOrigin={{horizontal: 'right', vertical: 'top'}}
-        anchorOrigin={{horizontal: 'right', vertical: 'top'}}
-      >
-      <MenuItemDialog primaryText="Sign Up" dialogContent={
+    <div>
+      <MenuItemDialog primaryText="" dialogContent={
         <div>
-        <TextField hintText="Enter your username" floatingLabelText="Username"/><br/>
-        <TextField hintText="Enter your password" floatingLabelText="Password"/>
+        <TextField id="username" hintText="Enter your username" floatingLabelText="Username"/><br/>
+        <TextField type="password" id="password" hintText="Enter your password" floatingLabelText="Password"/>
         </div>
-      } leftIcon={<PersonAdd/>} dialogTitle="Sign Up"/>
-      <MenuItemDialog primaryText="Login" dialogContent={
-        <div>
-        <TextField hintText="Enter your username" floatingLabelText="Username"/><br/>
-        <TextField hintText="Enter your password" floatingLabelText="Password"/>
-        </div>
-      } leftIcon={<SocialPerson/>} dialogTitle="Login"/>
-        <Divider />
-        <MenuItem primaryText="Help" />
-      </IconMenu>
+      } leftIcon={<SocialPerson/>} dialogTitle="Login/SignUp"/>
+    </div>
     }/>);
 }
 });
@@ -69,6 +55,6 @@ var DetailPage = React.createClass({
 var injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
 ReactDOM.render(
-  (<DetailPage/>)
+  (<FrontPage/>)
   , 
 	document.getElementById('content'));

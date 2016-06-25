@@ -48,39 +48,22 @@ var NormalAppBar = _react2.default.createClass({
 
   render: function render() {
     return _react2.default.createElement(_materialUi.AppBar, {
-      title: 'Whats For Dinner Today?',
+      title: "Whats for dinner today?",
       iconElementLeft: _react2.default.createElement(
         _materialUi.IconButton,
         null,
         _react2.default.createElement(_close2.default, null)
       ),
       iconElementRight: _react2.default.createElement(
-        _materialUi.IconMenu,
-        {
-          iconButtonElement: _react2.default.createElement(
-            _materialUi.IconButton,
-            null,
-            _react2.default.createElement(_moreVert2.default, null)
-          ),
-          targetOrigin: { horizontal: 'right', vertical: 'top' },
-          anchorOrigin: { horizontal: 'right', vertical: 'top' }
-        },
-        _react2.default.createElement(_form_dialog2.default, { primaryText: 'Sign Up', dialogContent: _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(_form_dialog2.default, { primaryText: '', dialogContent: _react2.default.createElement(
             'div',
             null,
-            _react2.default.createElement(_materialUi.TextField, { hintText: 'Enter your username', floatingLabelText: 'Username' }),
+            _react2.default.createElement(_materialUi.TextField, { id: 'username', hintText: 'Enter your username', floatingLabelText: 'Username' }),
             _react2.default.createElement('br', null),
-            _react2.default.createElement(_materialUi.TextField, { hintText: 'Enter your password', floatingLabelText: 'Password' })
-          ), leftIcon: _react2.default.createElement(_personAdd2.default, null), dialogTitle: 'Sign Up' }),
-        _react2.default.createElement(_form_dialog2.default, { primaryText: 'Login', dialogContent: _react2.default.createElement(
-            'div',
-            null,
-            _react2.default.createElement(_materialUi.TextField, { hintText: 'Enter your username', floatingLabelText: 'Username' }),
-            _react2.default.createElement('br', null),
-            _react2.default.createElement(_materialUi.TextField, { hintText: 'Enter your password', floatingLabelText: 'Password' })
-          ), leftIcon: _react2.default.createElement(_person2.default, null), dialogTitle: 'Login' }),
-        _react2.default.createElement(_materialUi.Divider, null),
-        _react2.default.createElement(_materialUi.MenuItem, { primaryText: 'Help' })
+            _react2.default.createElement(_materialUi.TextField, { type: 'password', id: 'password', hintText: 'Enter your password', floatingLabelText: 'Password' })
+          ), leftIcon: _react2.default.createElement(_person2.default, null), dialogTitle: 'Login/SignUp' })
       ) });
   }
 });
@@ -121,7 +104,7 @@ var DetailPage = _react2.default.createClass({
 
 var injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
-_reactDom2.default.render(_react2.default.createElement(DetailPage, null), document.getElementById('content'));
+_reactDom2.default.render(_react2.default.createElement(FrontPage, null), document.getElementById('content'));
 
 },{"./detailpage/simple_layout":2,"./dialogs/form_dialog":3,"./frontpage/grid_layout":4,"material-ui":244,"material-ui/styles":268,"material-ui/svg-icons/navigation/close":281,"material-ui/svg-icons/navigation/more-vert":285,"material-ui/svg-icons/social/person":287,"material-ui/svg-icons/social/person-add":286,"react":458,"react-dom":309,"react-tap-event-plugin":316}],2:[function(require,module,exports){
 'use strict';
@@ -205,9 +188,17 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _Snackbar = require('material-ui/Snackbar');
+
+var _Snackbar2 = _interopRequireDefault(_Snackbar);
+
 var _styles = require('material-ui/styles');
 
 var _materialUi = require('material-ui');
+
+var _person = require('material-ui/svg-icons/social/person');
+
+var _person2 = _interopRequireDefault(_person);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -252,11 +243,15 @@ var RaisedDialogButton = _react2.default.createClass({
   }
 });
 
+//actually Login/SignUp button but cannot change name of variable
 var MenuItemDialog = _react2.default.createClass({
   displayName: 'MenuItemDialog',
 
   getInitialState: function getInitialState() {
-    return { open: false };
+    return {
+      open: false,
+      openSnackBar: false,
+      message: "" };
   },
   handleClose: function handleClose() {
     this.setState({ open: false });
@@ -264,15 +259,54 @@ var MenuItemDialog = _react2.default.createClass({
   handleOpen: function handleOpen() {
     this.setState({ open: true });
   },
+  handleSnackOpen: function handleSnackOpen() {
+    this.setState({ openSnackBar: true });
+  },
+  handleSnackClose: function handleSnackClose() {
+    this.setState({ openSnackBar: false });
+  },
+  handleSubmit: function handleSubmit() {
+    var token = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    var username = document.getElementById("username").value;
+    var password = document.getElementById("password").value;
+    var xhttp = new XMLHttpRequest();
+    var t = this;
+    xhttp.onreadystatechange = function () {
+      if (xhttp.readyState == 4 && xhttp.status == 200) {
+        console.log("response : " + xhttp.responseText);
+        var message = "";
+        if (xhttp.responseText == "KEY_LOGIN_SUCCESS") {
+          message = "Login was successful";
+        } else if (xhttp.responseText == "KEY_USER_ACCOUNT_DISABLED") {
+          message = "Your account has been disabled";
+        } else if (xhttp.responseText == "KEY_INVALID_LOGIN") {
+          message = "Login was invalid. Please try again later.";
+        } else if (xhttp.responseText == "KEY_CREATE_USER_FAILED") {
+          message = "Failed to create new user. Please try again.";
+        } else if (xhttp.responseText == "KEY_CREATE_USER_SUCCESS") {
+          message = "Sign Up was succcessful.";
+        }
+      }
+      t.setState({ open: false });
+      t.setState({ message: message });
+      t.handleSnackOpen();
+    };
+    xhttp.open("POST", "/account/login/", true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send("csrfmiddlewaretoken=" + token + "&username=" + username + "&password=" + password);
+    document.getElementById("login_cancel_button").style.visibility = "hidden";
+    document.getElementById("login_submit_button").style.visibility = "hidden";
+  },
   render: function render() {
     var actions = [_react2.default.createElement(_materialUi.FlatButton, {
+      id: 'login_cancel_button',
       label: 'Cancel',
       primary: true,
       onTouchTap: this.handleClose }), _react2.default.createElement(_materialUi.FlatButton, {
+      id: 'login_submit_button',
       label: 'Submit',
       primary: true,
-      disabled: true,
-      onTouchTap: this.handleClose })];
+      onTouchTap: this.handleSubmit })];
 
     return _react2.default.createElement(
       'div',
@@ -282,13 +316,18 @@ var MenuItemDialog = _react2.default.createClass({
         _materialUi.Dialog,
         {
           title: this.props.dialogTitle,
-          modal: true,
           actions: actions,
           open: this.state.open,
           onRequestClose: this.handleClose
         },
         this.props.dialogContent
-      )
+      ),
+      _react2.default.createElement(_Snackbar2.default, {
+        open: this.state.openSnackBar,
+        message: this.state.message,
+        autoHideDuration: 3000,
+        onRequestClose: this.handleSnackClose
+      })
     );
   }
 });
@@ -296,7 +335,7 @@ var MenuItemDialog = _react2.default.createClass({
 exports.default = RaisedDialogButton;
 exports.default = MenuItemDialog;
 
-},{"material-ui":244,"material-ui/styles":268,"react":458}],4:[function(require,module,exports){
+},{"material-ui":244,"material-ui/Snackbar":197,"material-ui/styles":268,"material-ui/svg-icons/social/person":287,"react":458}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
