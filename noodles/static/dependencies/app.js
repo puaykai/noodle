@@ -11,19 +11,46 @@ import PersonAdd from 'material-ui/svg-icons/social/person-add';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 
 var NormalAppBar = React.createClass({
+    getInitialState: function(){
+        return {
+            loginCheck:false,
+        };
+    },
+    setLogin: function(val){
+        this.setState({loginCheck:val});
+    },
 	render: function() {
-		return  (  <AppBar
-    title={"Whats for dinner today?"}
-    iconElementLeft={<IconButton><NavigationClose /></IconButton>}
-    iconElementRight={
-    <div>
-      <MenuItemDialog primaryText="" dialogContent={
+	    console.log("get state :" + this.state.loginCheck);
+	    var mount_component = (    <div>
+      <MenuItemDialog changeLoginState={this.setLogin} primaryText="" dialogContent={
         <div>
         <TextField id="username" hintText="Enter your username" floatingLabelText="Username"/><br/>
         <TextField type="password" id="password" hintText="Enter your password" floatingLabelText="Password"/>
         </div>
       } leftIcon={<SocialPerson/>} dialogTitle="Login/SignUp"/>
-    </div>
+    </div>);
+        if (this.state.loginCheck){
+        console.log("OK!");
+            mount_component = (
+    <IconMenu
+      iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
+      anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+      targetOrigin={{horizontal: 'right', vertical: 'top'}}
+    >
+      <MenuItem primaryText="My Account"
+                onTouchTap={function(){console.log("Clicking my account")}}/>
+      <MenuItem primaryText="My Articles"
+                onTouchTap={function(){console.log("Clicking my articles");}}/>
+      <MenuItem primaryText="Sign out"
+                onTouchTap={function(){console.log("Clicking sign out");}}/>
+    </IconMenu>
+            );
+        }
+		return  (  <AppBar
+    title={"Whats for dinner today?"}
+    iconElementLeft={<IconButton><NavigationClose /></IconButton>}
+    iconElementRight={
+mount_component
     }/>);
 }
 });
@@ -55,6 +82,6 @@ var DetailPage = React.createClass({
 var injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
 ReactDOM.render(
-  (<FrontPage/>)
+  (<DetailPage/>)
   , 
 	document.getElementById('content'));

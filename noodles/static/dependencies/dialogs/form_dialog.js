@@ -56,7 +56,9 @@ var MenuItemDialog = React.createClass({
         if (xhttp.readyState == 4 && xhttp.status == 200) {
             console.log("response : " + xhttp.responseText);
             var message = "";
+            var login = false;
             if (xhttp.responseText == "KEY_LOGIN_SUCCESS") {
+                login=true;
                 message = "Login was successful";
             } else if (xhttp.responseText == "KEY_USER_ACCOUNT_DISABLED") {
                 message = "Your account has been disabled";
@@ -65,12 +67,14 @@ var MenuItemDialog = React.createClass({
             } else if (xhttp.responseText == "KEY_CREATE_USER_FAILED") {
                 message = "Failed to create new user. Please try again.";
             } else if (xhttp.responseText == "KEY_CREATE_USER_SUCCESS") {
+                login = true;
                 message = "Sign Up was succcessful.";
             }
         }
         t.setState({open:false});
         t.setState({message:message});
         t.handleSnackOpen();
+        t.props.changeLoginState(login);
     };
     xhttp.open("POST", "/account/login/", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
