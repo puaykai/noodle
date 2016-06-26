@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Snackbar from 'material-ui/Snackbar';
 import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
 import {AppBar, IconButton, IconMenu, MenuItem, Divider, TextField} from 'material-ui';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
@@ -10,6 +11,21 @@ import GridListSimple from "./frontpage/grid_layout";
 import PersonAdd from 'material-ui/svg-icons/social/person-add';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 
+function getCookie(cname){
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length,c.length);
+        }
+    }
+    return "";
+  }
+
 var NormalAppBar = React.createClass({
     getInitialState: function(){
         return {
@@ -19,6 +35,9 @@ var NormalAppBar = React.createClass({
     setLogin: function(val){
         this.setState({loginCheck:val});
     },
+    handleSnackClose: function(){this.props.closeSnackBar()},
+    handleSnackOpen: function(){this.props.openSnackBar()},
+    changeSnackMessage: function(message){this.props.changeSnackMessage(message)},
 	render: function() {
 	    console.log("get state :" + this.state.loginCheck);
 	    var mount_component = (    <div>
@@ -30,7 +49,31 @@ var NormalAppBar = React.createClass({
       } leftIcon={<SocialPerson/>} dialogTitle="Login/SignUp"/>
     </div>);
         if (this.state.loginCheck){
-        console.log("OK!");
+        var t = this;
+        var signout = function(){
+                    var token = getCookie('csrftoken');
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function() {
+                        if (xhttp.readyState == 4 && xhttp.status == 200) {
+                            var message = "";
+                            var login = true;
+                            if (xhttp.responseText == "KEY_LOGOUT_SUCCESSFUL"){
+                                login = false;
+                                message = "Logout was successful";
+                            } else if (xhttp.responseText == "KEY_LOGOUT_FAILED"){
+                                message = "Logout was not successful";
+                            }
+//                            t.setLogin(login);
+                            t.changeSnackMessage(message);
+                            t.handleSnackOpen();
+                            console.log("open snack bar");
+                        }
+                    };
+                    xhttp.open("POST", "/account/logout/", true);
+                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    xhttp.send("csrfmiddlewaretoken="+token);
+        };
+
             mount_component = (
     <IconMenu
       iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
@@ -42,7 +85,7 @@ var NormalAppBar = React.createClass({
       <MenuItem primaryText="My Articles"
                 onTouchTap={function(){console.log("Clicking my articles");}}/>
       <MenuItem primaryText="Sign out"
-                onTouchTap={function(){console.log("Clicking sign out");}}/>
+                onTouchTap={signout}/>
     </IconMenu>
             );
         }
@@ -56,23 +99,51 @@ mount_component
 });
 
 var FrontPage  = React.createClass({
+  getInitialState: function(){
+    return {
+        openSnackBar:false,
+        message:""
+    };
+  },
+  handleSnackOpen:function(){this.setState({openSnackBar:true})},
+  handleSnackClose:function(){this.setState({openSnackBar:false})},
+  changeSnackMessage:function(message){this.setState({message:message})},
   render: function() {
     return (<MuiThemeProvider muiTheme={getMuiTheme()}>
       <div>
-      <NormalAppBar/>
+      <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
         <GridListSimple/>
+                <Snackbar
+                    open={this.state.openSnackBar}
+                    message={this.state.message}
+                    autoHideDuration={3000}
+                    onRequestClose={this.handleSnackClose}/>
         </div>
       </MuiThemeProvider>);
   }
 });
 
 var DetailPage = React.createClass({
+  getInitialState: function(){
+    return {
+        openSnackBar:false,
+        message:""
+    };
+  },
+  handleSnackOpen:function(){this.setState({openSnackBar:true})},
+  handleSnackClose:function(){this.setState({openSnackBar:false})},
+  changeSnackMessage:function(message){this.setState({message:message})},
   render: function() {
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
       <div>
-      <NormalAppBar/>
+      <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
       <SimpleLayout/>
+                <Snackbar
+                    open={this.state.openSnackBar}
+                    message={this.state.message}
+                    autoHideDuration={3000}
+                    onRequestClose={this.handleSnackClose}/>
       </div>
       </MuiThemeProvider>
       );

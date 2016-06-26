@@ -4,6 +4,21 @@ import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
 import {Dialog, FlatButton, RaisedButton, MenuItem} from 'material-ui';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 
+function getCookie(cname){
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length,c.length);
+        }
+    }
+    return "";
+  }
+
 var RaisedDialogButton = React.createClass({
   getInitialState: function(){return {open:false};},
   handleClose:function(){this.setState({open:false});},
@@ -40,14 +55,22 @@ var MenuItemDialog = React.createClass({
     return {
         open:false,
         openSnackBar:false,
-        message:""};
+        message:"",
+        isLogin:false
+    };
   },
   handleClose:function(){this.setState({open:false});},
   handleOpen:function(){this.setState({open:true});},
   handleSnackOpen:function(){this.setState({openSnackBar:true});},
-  handleSnackClose:function(){this.setState({openSnackBar:false})},
+  handleSnackClose:function(){
+    this.setState({openSnackBar:false});
+    if(this.state.isLogin){
+        this.props.changeLoginState(true);
+    }
+    },
   handleSubmit: function(){
-    var token = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    var token = getCookie('csrftoken');
+    console.log('onsubmit token : ' + token);
     var username = document.getElementById("username").value;
     var password = document.getElementById("password").value;
     var xhttp = new XMLHttpRequest();
@@ -70,11 +93,17 @@ var MenuItemDialog = React.createClass({
                 login = true;
                 message = "Sign Up was succcessful.";
             }
+            t.setState({isLogin:true});
+            t.setState({open:false});
+            t.setState({message:message});
+            console.log("message : " + message);
+            console.log("message is undefined: " + (message == undefined));
+            t.handleSnackOpen();
+
+//            t.props.changeLoginState(login);
+            console.log("opening snack bar");
         }
-        t.setState({open:false});
-        t.setState({message:message});
-        t.handleSnackOpen();
-        t.props.changeLoginState(login);
+
     };
     xhttp.open("POST", "/account/login/", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
