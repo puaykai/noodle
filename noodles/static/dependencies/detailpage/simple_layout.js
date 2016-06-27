@@ -35,6 +35,7 @@ const comments_style = {
 
 var SimpleLayout = React.createClass({
 	render: function(){
+	console.log("simple layout ....");
 		return ( <div>
     <Paper style={style} 
     zDepth={1}
@@ -45,4 +46,21 @@ var SimpleLayout = React.createClass({
 	}
 });
 
+var ArticleLayout = React.createClass({
+    render: function(){
+    console.log("article layout  .....");
+    AlloyEditor.editable('myContentEditable');
+        return (
+            <div>
+                <Paper style={style}
+                zDepth={1}
+                children={<div>
+                    <textarea id="myContentEditable"></textarea>
+                </div>}/>
+            </div>
+        );
+    }
+});
+
+export default ArticleLayout;
 export default SimpleLayout;

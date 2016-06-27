@@ -7,6 +7,7 @@ import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MenuItemDialog from "./dialogs/form_dialog";
 import SimpleLayout from "./detailpage/simple_layout";
+import ArticleLayout from "./detailpage/simple_layout";
 import GridListSimple from "./frontpage/grid_layout";
 import PersonAdd from 'material-ui/svg-icons/social/person-add';
 import SocialPerson from 'material-ui/svg-icons/social/person';
@@ -35,7 +36,9 @@ var NormalAppBar = React.createClass({
     setLogin: function(val){
         this.setState({loginCheck:val});
     },
-    handleSnackClose: function(){this.props.closeSnackBar()},
+    handleSnackClose: function(){
+        this.props.closeSnackBar();
+    },
     handleSnackOpen: function(){this.props.openSnackBar()},
     changeSnackMessage: function(message){this.props.changeSnackMessage(message)},
 	render: function() {
@@ -63,7 +66,7 @@ var NormalAppBar = React.createClass({
                             } else if (xhttp.responseText == "KEY_LOGOUT_FAILED"){
                                 message = "Logout was not successful";
                             }
-//                            t.setLogin(login);
+                            t.setLogin(login);
                             t.changeSnackMessage(message);
                             t.handleSnackOpen();
                             console.log("open snack bar");
@@ -73,7 +76,6 @@ var NormalAppBar = React.createClass({
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.send("csrfmiddlewaretoken="+token);
         };
-
             mount_component = (
     <IconMenu
       iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
@@ -150,9 +152,37 @@ var DetailPage = React.createClass({
   }
 });
 
+var WriteArticlePage = React.createClass({
+  getInitialState: function(){
+    return {
+        openSnackBar:false,
+        message:""
+    };
+  },
+  handleSnackOpen:function(){this.setState({openSnackBar:true})},
+  handleSnackClose:function(){this.setState({openSnackBar:false})},
+  changeSnackMessage:function(message){this.setState({message:message})},
+    render: function(){
+        console.log("write article page ....");
+        return (
+            <MuiThemeProvider muiTheme={getMuiTheme()}>
+                <div>
+                    <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
+                    <ArticleLayout/>
+                    <Snackbar
+                        open={this.state.openSnackBar}
+                        message={this.state.message}
+                        autoHideDuration={3000}
+                        onRequestClose={this.handleSnackClose}/>
+                </div>
+            </MuiThemeProvider>
+        );
+    }
+});
+
 var injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
 ReactDOM.render(
-  (<DetailPage/>)
+  (<WriteArticlePage/>)
   , 
 	document.getElementById('content'));
