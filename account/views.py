@@ -27,15 +27,21 @@ def my_login(request):
                 return HttpResponse("KEY_INVALID_LOGIN", status=200)
         else:
             try:
-                User.objects.create_user(username, "", password).save()
+                user = User.objects.create_user(username, "", password)
+                user.save()
             except:
                 return HttpResponse("KEY_CREATE_USER_FAILED", status=200)
+            login(request, user)
             return HttpResponse("KEY_CREATE_USER_SUCCESS", status=200)
 
 
 @login_required
 def my_logout(request):
-    logout(request)
+    try:
+        logout(request)
+        return HttpResponse("KEY_LOGOUT_SUCCESSFUL", status=200)
+    except:
+        return HttpResponse("KEY_LOGOUT_FAILED", status=200)
 
 @login_required
 def my_account(request):
