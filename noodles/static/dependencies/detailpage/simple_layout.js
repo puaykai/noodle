@@ -1,6 +1,7 @@
 import React from 'react';
 import Paper from 'material-ui/Paper';
 
+var AlloyEditor = require('alloyeditor');
 var main_paper_width = Math.floor(window.innerWidth * 0.95);
 var main_paper_height = Math.floor(window.innerHeight * 2);
 var sub_paper_width = Math.floor(main_paper_width * 0.4);
@@ -37,7 +38,7 @@ var SimpleLayout = React.createClass({
 	render: function(){
 	console.log("simple layout ....");
 		return ( <div>
-    <Paper style={style} 
+    <Paper style={style}
     zDepth={1}
     children={<div><Paper style={sub_style} zDepth={2} />
 			<Paper style={sub_style} zDepth={2} />
@@ -55,12 +56,13 @@ var ArticleLayout = React.createClass({
                 <Paper style={style}
                 zDepth={1}
                 children={<div>
-                    <textarea id="myContentEditable"></textarea>
+                    <div id="myContentEditable"></div>
                 </div>}/>
             </div>
         );
     }
 });
 
-export default ArticleLayout;
+
 export default SimpleLayout;
+export default ArticleLayout;

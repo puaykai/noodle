@@ -1,174 +1,269 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Snackbar from 'material-ui/Snackbar';
-import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
-import {AppBar, IconButton, IconMenu, MenuItem, Divider, TextField} from 'material-ui';
+import AppBar from 'material-ui/AppBar';
+import IconButton from 'material-ui/IconButton';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
-import MenuItemDialog from "./dialogs/form_dialog";
-import SimpleLayout from "./detailpage/simple_layout";
-import ArticleLayout from "./detailpage/simple_layout";
-import GridListSimple from "./frontpage/grid_layout";
-import PersonAdd from 'material-ui/svg-icons/social/person-add';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import {Tabs, Tab} from 'material-ui/Tabs';
+import {List, ListItem} from 'material-ui/List';
+import Slider from 'material-ui/Slider';
+import Subheader from 'material-ui/Subheader';
+import TextField from 'material-ui/TextField';
+import DatePicker from 'material-ui/DatePicker';
+import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
 
-function getCookie(cname){
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i = 0; i <ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length,c.length);
-        }
-    }
-    return "";
-  }
-
-var NormalAppBar = React.createClass({
+var GenericList = React.createClass({
     getInitialState: function(){
         return {
-            loginCheck:false,
+            generic_empty_message:""
         };
     },
-    setLogin: function(val){
-        this.setState({loginCheck:val});
-    },
-    handleSnackClose: function(){
-        this.props.closeSnackBar();
-    },
-    handleSnackOpen: function(){this.props.openSnackBar()},
-    changeSnackMessage: function(message){this.props.changeSnackMessage(message)},
-	render: function() {
-	    console.log("get state :" + this.state.loginCheck);
-	    var mount_component = (    <div>
-      <MenuItemDialog changeLoginState={this.setLogin} primaryText="" dialogContent={
-        <div>
-        <TextField id="username" hintText="Enter your username" floatingLabelText="Username"/><br/>
-        <TextField type="password" id="password" hintText="Enter your password" floatingLabelText="Password"/>
-        </div>
-      } leftIcon={<SocialPerson/>} dialogTitle="Login/SignUp"/>
-    </div>);
-        if (this.state.loginCheck){
-        var t = this;
-        var signout = function(){
-                    var token = getCookie('csrftoken');
-                    var xhttp = new XMLHttpRequest();
-                    xhttp.onreadystatechange = function() {
-                        if (xhttp.readyState == 4 && xhttp.status == 200) {
-                            var message = "";
-                            var login = true;
-                            if (xhttp.responseText == "KEY_LOGOUT_SUCCESSFUL"){
-                                login = false;
-                                message = "Logout was successful";
-                            } else if (xhttp.responseText == "KEY_LOGOUT_FAILED"){
-                                message = "Logout was not successful";
-                            }
-                            t.setLogin(login);
-                            t.changeSnackMessage(message);
-                            t.handleSnackOpen();
-                            console.log("open snack bar");
-                        }
-                    };
-                    xhttp.open("POST", "/account/logout/", true);
-                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhttp.send("csrfmiddlewaretoken="+token);
-        };
-            mount_component = (
-    <IconMenu
-      iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
-      anchorOrigin={{horizontal: 'right', vertical: 'top'}}
-      targetOrigin={{horizontal: 'right', vertical: 'top'}}
-    >
-      <MenuItem primaryText="My Account"
-                onTouchTap={function(){console.log("Clicking my account")}}/>
-      <MenuItem primaryText="My Articles"
-                onTouchTap={function(){console.log("Clicking my articles");}}/>
-      <MenuItem primaryText="Sign out"
-                onTouchTap={signout}/>
-    </IconMenu>
-            );
+    render: function(){
+        if (this.props.menu_items.size() > 0){
+            var items = this.props.menu_items;
+        } else {
+            var items = <Subheader>this.state.generic_empty_message<Subheader/>;
         }
-		return  (  <AppBar
-    title={"Whats for dinner today?"}
+        return (
+            <List>
+                {items}
+            </List>
+        );
+    }
+});
+
+var Header = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (
+  <AppBar
+    title="Title"
     iconElementLeft={<IconButton><NavigationClose /></IconButton>}
     iconElementRight={
-mount_component
-    }/>);
-}
+      <IconMenu
+        iconButtonElement={
+          <IconButton><MoreVertIcon /></IconButton>
+        }
+        targetOrigin={{horizontal: 'right', vertical: 'top'}}
+        anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+      >
+        <MenuItem primaryText="Refresh" />
+        <MenuItem primaryText="Help" />
+        <MenuItem primaryText="Sign out" />
+      </IconMenu>
+    }
+  />
+        );
+    }
 });
 
-var FrontPage  = React.createClass({
-  getInitialState: function(){
-    return {
-        openSnackBar:false,
-        message:""
-    };
-  },
-  handleSnackOpen:function(){this.setState({openSnackBar:true})},
-  handleSnackClose:function(){this.setState({openSnackBar:false})},
-  changeSnackMessage:function(message){this.setState({message:message})},
-  render: function() {
-    return (<MuiThemeProvider muiTheme={getMuiTheme()}>
-      <div>
-      <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
-        <GridListSimple/>
-                <Snackbar
-                    open={this.state.openSnackBar}
-                    message={this.state.message}
-                    autoHideDuration={3000}
-                    onRequestClose={this.handleSnackClose}/>
-        </div>
-      </MuiThemeProvider>);
-  }
-});
-
-var DetailPage = React.createClass({
-  getInitialState: function(){
-    return {
-        openSnackBar:false,
-        message:""
-    };
-  },
-  handleSnackOpen:function(){this.setState({openSnackBar:true})},
-  handleSnackClose:function(){this.setState({openSnackBar:false})},
-  changeSnackMessage:function(message){this.setState({message:message})},
-  render: function() {
-    return (
-      <MuiThemeProvider muiTheme={getMuiTheme()}>
-      <div>
-      <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
-      <SimpleLayout/>
-                <Snackbar
-                    open={this.state.openSnackBar}
-                    message={this.state.message}
-                    autoHideDuration={3000}
-                    onRequestClose={this.handleSnackClose}/>
-      </div>
-      </MuiThemeProvider>
-      );
-  }
-});
-
-var WriteArticlePage = React.createClass({
-  getInitialState: function(){
-    return {
-        openSnackBar:false,
-        message:""
-    };
-  },
-  handleSnackOpen:function(){this.setState({openSnackBar:true})},
-  handleSnackClose:function(){this.setState({openSnackBar:false})},
-  changeSnackMessage:function(message){this.setState({message:message})},
+var Footer = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
     render: function(){
-        console.log("write article page ....");
+        return (
+<footer id="main-footer">
+	<div class="container">
+		<div id="logos">
+			<a rel="nofollow" target="_blank" href="https://www.mcafeesecure.com/RatingVerify?ref=www.elegantthemes.com"></a>
+			<a rel="nofollow" target="_blank" href="https://safeweb.norton.com/report/show?url=www.elegantthemes.com"></a>
+			<a rel="nofollow" target="_blank" href="http://www.bbb.org/greater-san-francisco/business-reviews/web-design/elegant-themes-in-san-francisco-ca-376238"></a>
+		</div>
+		<div id="copyright">
+			<a id="facebook" href="http://www.facebook.com/elegantthemes/">65,289 <span>followers</span></a>
+			<a id="twitter" href="http://www.twitter.com/elegantthemes/">30,323 <span>followers</span></a>
+			<a id="email" href="http://www.elegantthemes.com/newsletter.html">207,907 <span>followers</span></a>
+		</div>
+	</div>
+	<ul id="bottom-menu">
+		<li><a href="http://www.elegantthemes.com/about/">About Us</a></li>
+		<li><a href="http://www.elegantthemes.com/affiliates/">Affiliates</a></li>
+		<li><a href="http://www.elegantthemes.com/careers/">Careers</a></li>
+		<li><a href="http://www.elegantthemes.com/privacy.html">Privacy Policy</a></li>
+		<li><a href="http://www.elegantthemes.com/terms.html">Terms &amp; Conditions</a></li>
+	</ul>
+	<p id="company_copyright">Copyright © 2016 Elegant Themes ®</p>
+</footer>
+        );
+    }
+});
+
+var TutorList = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (
+            <div>
+            <TextField
+              hintText="Enter Tutor Id"
+              floatingLabelText="Tutor Id"
+            /><br />
+            <GenericList
+                menu_items={}/>
+            </div>
+        );
+    }
+});
+
+var Assignment = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>assignment</div>);
+    }
+});
+
+var AssignmentsList = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>
+        <GenericList
+            menu_items={}/>
+        </div>);
+    }
+});
+
+var NewAssignmentPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>
+        <DatePicker hintText="Click to select assignment due date"/><br/>
+        <TextField
+              hintText="Enter the name of the assignment"
+              floatingLabelText="Assignment Name"
+            /><br/>
+        <TextField
+              hintText="Enter the number of questions in this assignment"
+              floatingLabelText="Number of questions in assignment"
+            /><br/>
+        <GenericList
+              menu_items={}/>
+        </div>);
+    }
+});
+
+var StudentMainPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+
+        const styles = {
+          headline: {
+            fontSize: 24,
+            paddingTop: 16,
+            marginBottom: 12,
+            fontWeight: 400,
+          },
+        };
+
+        return (
+  <Tabs>
+    <Tab label="Due Assignments" >
+        <GenericList
+            menu_items={}/>
+    </Tab>
+    <Tab label="Completed Assignments" >
+        <GenericList
+            menu_items={}/>
+    </Tab>
+  </Tabs>
+        );
+    }
+});
+
+var TutorMainPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+
+        const styles = {
+          headline: {
+            fontSize: 24,
+            paddingTop: 16,
+            marginBottom: 12,
+            fontWeight: 400,
+          },
+        };
+
+        return (  <Tabs>
+    <Tab label="Assignments" >
+      <div>
+        <h2 style={styles.headline}>Assignments</h2>
+        <p>
+          This is an example tab.
+        </p>
+        <p>
+          You can put any sort of HTML or react component in here. It even keeps the component state!
+        </p>
+        <Slider name="slider0" defaultValue={0.5} />
+      </div>
+    </Tab>
+    <Tab label="Students" >
+        <GenericList
+            menu_items={}/>
+    </Tab>
+  </Tabs>
+        );
+    }
+});
+
+var LoginPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>
+
+        </div>);
+    }
+});
+
+var App = React.createClass({
+    componentDidMount: function(){},
+    getInitialState: function(){
+        return {
+            current_page:<TutorMainPage/>,
+            openSnackBar:false,
+            message:""
+        };
+    },
+    handleSnackOpen:function(){this.setState({openSnackBar:true})},
+    handleSnackClose:function(){this.setState({openSnackBar:false})},
+    changeSnackMessage:function(message){this.setState({message:message})},
+    changePage: function(page_name){
+        if (page_name == "tutor_main") {
+            this.setState({"current_page":<TutorMainPage/>});
+        } else if (page_name == "student_main") {
+            this.setState({"current_page":<StudentMainPage/>});
+        } else if (page_name == "new_assignment") {
+            this.setState({"current_page":<NewAssignmentPage/>});
+        } else if (page_name == "assignment_list") {
+            this.setState({"current_page":<AssignmentsList/>});
+        } else if (page_name == "assignment") {
+            this.setState({"current_page":<Assignment/>});
+        }
+    },
+    render: function(){
         return (
             <MuiThemeProvider muiTheme={getMuiTheme()}>
                 <div>
-                    <NormalAppBar openSnackBar={this.handleSnackOpen} closeSnackBar={this.handleSnackClose} changeSnackMessage={this.changeSnackMessage}/>
-                    <ArticleLayout/>
+                    <Header/>
+                    {this.state.current_page}
+                    <Footer/>
                     <Snackbar
                         open={this.state.openSnackBar}
                         message={this.state.message}
@@ -183,6 +278,6 @@ var WriteArticlePage = React.createClass({
 var injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
 ReactDOM.render(
-  (<WriteArticlePage/>)
-  , 
+  (<App/>)
+  ,
 	document.getElementById('content'));

@@ -6,7 +6,7 @@ from django.core import serializers
 
 
 class Question(models.Model):
-    content = models.TextField()
+    content = models.TextField(default="")
     maximum_grade = models.IntegerField(default=0)
 
 
@@ -18,7 +18,7 @@ class Assignment(models.Model):
         ('GR', 'graded'),
         ('VE', 'reviewed')
     )
-    name = models.TextField()
+    name = models.TextField(default="")
     questions = models.ManyToManyField(Question, related_name="questions") # so that we can use questions from previous assignments
     graded = models.BooleanField(default=False)
     type = models.CharField(max_length=2, choices=CONDITION_OF_ASSSIGNMENT, default='DR')
@@ -84,19 +84,19 @@ class Assignment(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, related_name="student")
-    assignments = models.ManyToManyField(Assignment, related_name="assignments")
+    assignments = models.ManyToManyField(Assignment, related_name="student_assignments")
 
 
 class Answer(models.Model):
     question = models.ForeignKey(Question, related_name="answer") # can have many answers, we allow for corrections
-    content = models.TextField()
+    content = models.TextField(default="")
     grade = models.IntegerField(default=0)
-    comment = models.TextField()
+    comment = models.TextField(default="")
     graded = models.BooleanField(default=False)
 
 
 class Tutor(models.Model):
     user = models.OneToOneField(User, related_name="tutor")
     students = models.ManyToManyField(Student, related_name="students")
-    assignments = models.ManyToManyField(Assignment, related_name="assignments") # many to many so that later tutor can share assignment
+    assignments = models.ManyToManyField(Assignment, related_name="tutor_assignments") # many to many so that later tutor can share assignment
 
