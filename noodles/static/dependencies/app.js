@@ -16,8 +16,10 @@ import DatePicker from 'material-ui/DatePicker';
 import Avatar from 'material-ui/Avatar';
 import Paper from 'material-ui/Paper';
 import FlatButton from 'material-ui/FlatButton';
+import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
 import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
 
+var $ = require('jquery');
 
 var GenericList = React.createClass({
     getInitialState: function(){
@@ -248,34 +250,47 @@ var LoginPage = React.createClass({
     render: function(){
 
     const style = {
-        height: 100,
-        width: 100,
-        margin: 20,
-        textAlign: 'center',
-        display: 'inline-block'
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 20,
+        flex:1,
+        alignItems:'center',
+        justifyContent:'center'
     };
 
-        return (<div>
-            <Paper
-                style={style}
-                zDepth={1}
-                children={
+    const styles = {
+      block: {
+        maxWidth: 250,
+      },
+      radioButton: {
+        marginBottom: 16,
+      },
+    };
+
+        return (<div style={style}>
                 <div>
-                    <Subheader>SignUp/Login</Subheader>
+                    <h4>SignUp/Login</h4>
                     <TextField
                         hintText="Enter your username"
                         floatingLabelText="Username"/><br/>
                     <TextField
                         hintText="Enter your password"
-                        floatingLabelText="Password"/><br/>
-                    <div>
-                        <input type="radio" name="tutor_or_student" value="tutor"/><br/>
-                        <input type="radio" name="tutor_or_student" value="student"/><br/>
-                    </div>
+                        floatingLabelText="Password"/><br/><br/>
+                    <RadioButtonGroup name="shipSpeed" defaultSelected="not_light">
+                      <RadioButton
+                        value="light"
+                        label="I am a tutor"
+                        style={styles.radioButton}
+                      />
+                      <RadioButton
+                        value="not_light"
+                        label="I am a student"
+                        style={styles.radioButton}
+                      />
+                    </RadioButtonGroup>
                     <FlatButton
                         label="Submit"/>
                 </div>
-                }/>
         </div>);
     }
 });
