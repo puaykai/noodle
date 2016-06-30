@@ -24,20 +24,22 @@ var $ = require('jquery');
 var GenericList = React.createClass({
     getInitialState: function(){
         return {
-            generic_empty_message:""
         };
     },
     render: function(){
-        if (this.props.menu_items.size() > 0){
-            var items = this.props.menu_items;
+    console.log("length of menu_items : " + this.props.menu_items.length);
+    console.log("default message : " + this.props.default_empty_message);
+    console.log("menu_items : "+ this.props.menu_items);
+        if (this.props.menu_items.length > 0){
+            return (
+                <List>
+                    {this.props.menu_items.map(function(item){return item;})}
+                </List>
+            );
         } else {
-            var items = (this.state.generic_empty_message);
+            return (<h4>{this.props.default_empty_message}</h4>);
         }
-        return (
-            <List>
-                {this.props.menu_items.map(function(item){return item;})}
-            </List>
-        );
+
     }
 });
 
@@ -125,6 +127,7 @@ var StudentMainPage = React.createClass({
             marginBottom: 12,
             fontWeight: 400,
           },
+
         };
 
         return (
@@ -157,26 +160,41 @@ var TutorMainPage = React.createClass({
             marginBottom: 12,
             fontWeight: 400,
           },
+          centerItem: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 20,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          },
+          centerList: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 10,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          }
         };
 
-        return (  <Tabs>
+        return (
+        <div style={styles.centerList}>
+        <Tabs>
     <Tab label="Assignments" >
-      <div>
-        <h2 style={styles.headline}>Assignments</h2>
-        <p>
-          This is an example tab.
-        </p>
-        <p>
-          You can put any sort of HTML or react component in here. It even keeps the component state!
-        </p>
-        <Slider name="slider0" defaultValue={0.5} />
-      </div>
+           <GenericList
+                default_empty_message={"You have not created any assignments yet."}
+                menu_items={[]}
+                />
     </Tab>
     <Tab label="Students" >
         <GenericList
-            menu_items={[]}/>
+            default_empty_message={"You do have any students yet."}
+            menu_items={[
+            ]}/>
     </Tab>
   </Tabs>
+  </div>
         );
     }
 });
@@ -299,7 +317,7 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<LoginPage/>,
+            current_page:<TutorMainPage/>,
             openSnackBar:false,
             message:""
         };
