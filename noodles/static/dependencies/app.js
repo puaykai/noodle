@@ -13,7 +13,11 @@ import Slider from 'material-ui/Slider';
 import Subheader from 'material-ui/Subheader';
 import TextField from 'material-ui/TextField';
 import DatePicker from 'material-ui/DatePicker';
+import Avatar from 'material-ui/Avatar';
+import Paper from 'material-ui/Paper';
+import FlatButton from 'material-ui/FlatButton';
 import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
+
 
 var GenericList = React.createClass({
     getInitialState: function(){
@@ -25,24 +29,166 @@ var GenericList = React.createClass({
         if (this.props.menu_items.size() > 0){
             var items = this.props.menu_items;
         } else {
-            var items = <Subheader>this.state.generic_empty_message<Subheader/>;
+            var items = (this.state.generic_empty_message);
         }
         return (
             <List>
-                {items}
+                {this.props.menu_items.map(function(item){return item;})}
             </List>
+        );
+    }
+});
+
+
+var TutorList = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (
+            <div>
+            <TextField
+              hintText="Enter Tutor Id"
+              floatingLabelText="Tutor Id"
+            /><br />
+            <GenericList
+                menu_items={
+                [<ListItem
+                    primaryText="Lim Tian Heng"
+                    leftAvatar={<Avatar/>}
+                    />,
+                <ListItem/>,
+                <ListItem/>]
+                }/>
+            </div>
+        );
+    }
+});
+
+
+var Assignment = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>assignment</div>);
+    }
+});
+
+var AssignmentsList = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>
+        <GenericList
+            menu_items={[]}/>
+        </div>);
+    }
+});
+
+
+var NewAssignmentPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>
+        <DatePicker hintText="Click to select assignment due date"/><br/>
+        <TextField
+              hintText="Enter the name of the assignment"
+              floatingLabelText="Assignment Name"
+            /><br/>
+        <TextField
+              hintText="Enter the number of questions in this assignment"
+              floatingLabelText="Number of questions in assignment"
+            /><br/>
+        <GenericList
+              menu_items={[]}/>
+        </div>);
+    }
+});
+
+
+var StudentMainPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+
+        const styles = {
+          headline: {
+            fontSize: 24,
+            paddingTop: 16,
+            marginBottom: 12,
+            fontWeight: 400,
+          },
+        };
+
+        return (
+  <Tabs>
+    <Tab label="Due Assignments" >
+        <GenericList
+            menu_items={[]}/>
+    </Tab>
+    <Tab label="Completed Assignments" >
+        <GenericList
+            menu_items={[]}/>
+    </Tab>
+  </Tabs>
+        );
+    }
+});
+
+
+
+var TutorMainPage = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+
+        const styles = {
+          headline: {
+            fontSize: 24,
+            paddingTop: 16,
+            marginBottom: 12,
+            fontWeight: 400,
+          },
+        };
+
+        return (  <Tabs>
+    <Tab label="Assignments" >
+      <div>
+        <h2 style={styles.headline}>Assignments</h2>
+        <p>
+          This is an example tab.
+        </p>
+        <p>
+          You can put any sort of HTML or react component in here. It even keeps the component state!
+        </p>
+        <Slider name="slider0" defaultValue={0.5} />
+      </div>
+    </Tab>
+    <Tab label="Students" >
+        <GenericList
+            menu_items={[]}/>
+    </Tab>
+  </Tabs>
         );
     }
 });
 
 var Header = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            header_title:""
+        };
     },
     render: function(){
         return (
   <AppBar
-    title="Title"
+    title={this.state.header_title}
     iconElementLeft={<IconButton><NavigationClose /></IconButton>}
     iconElementRight={
       <IconMenu
@@ -94,140 +240,42 @@ var Footer = React.createClass({
     }
 });
 
-var TutorList = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-        return (
-            <div>
-            <TextField
-              hintText="Enter Tutor Id"
-              floatingLabelText="Tutor Id"
-            /><br />
-            <GenericList
-                menu_items={}/>
-            </div>
-        );
-    }
-});
-
-var Assignment = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-        return (<div>assignment</div>);
-    }
-});
-
-var AssignmentsList = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-        return (<div>
-        <GenericList
-            menu_items={}/>
-        </div>);
-    }
-});
-
-var NewAssignmentPage = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-        return (<div>
-        <DatePicker hintText="Click to select assignment due date"/><br/>
-        <TextField
-              hintText="Enter the name of the assignment"
-              floatingLabelText="Assignment Name"
-            /><br/>
-        <TextField
-              hintText="Enter the number of questions in this assignment"
-              floatingLabelText="Number of questions in assignment"
-            /><br/>
-        <GenericList
-              menu_items={}/>
-        </div>);
-    }
-});
-
-var StudentMainPage = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-
-        const styles = {
-          headline: {
-            fontSize: 24,
-            paddingTop: 16,
-            marginBottom: 12,
-            fontWeight: 400,
-          },
-        };
-
-        return (
-  <Tabs>
-    <Tab label="Due Assignments" >
-        <GenericList
-            menu_items={}/>
-    </Tab>
-    <Tab label="Completed Assignments" >
-        <GenericList
-            menu_items={}/>
-    </Tab>
-  </Tabs>
-        );
-    }
-});
-
-var TutorMainPage = React.createClass({
-    getInitialState: function(){
-        return {};
-    },
-    render: function(){
-
-        const styles = {
-          headline: {
-            fontSize: 24,
-            paddingTop: 16,
-            marginBottom: 12,
-            fontWeight: 400,
-          },
-        };
-
-        return (  <Tabs>
-    <Tab label="Assignments" >
-      <div>
-        <h2 style={styles.headline}>Assignments</h2>
-        <p>
-          This is an example tab.
-        </p>
-        <p>
-          You can put any sort of HTML or react component in here. It even keeps the component state!
-        </p>
-        <Slider name="slider0" defaultValue={0.5} />
-      </div>
-    </Tab>
-    <Tab label="Students" >
-        <GenericList
-            menu_items={}/>
-    </Tab>
-  </Tabs>
-        );
-    }
-});
 
 var LoginPage = React.createClass({
     getInitialState: function(){
         return {};
     },
     render: function(){
-        return (<div>
 
+    const style = {
+        height: 100,
+        width: 100,
+        margin: 20,
+        textAlign: 'center',
+        display: 'inline-block'
+    };
+
+        return (<div>
+            <Paper
+                style={style}
+                zDepth={1}
+                children={
+                <div>
+                    <Subheader>SignUp/Login</Subheader>
+                    <TextField
+                        hintText="Enter your username"
+                        floatingLabelText="Username"/><br/>
+                    <TextField
+                        hintText="Enter your password"
+                        floatingLabelText="Password"/><br/>
+                    <div>
+                        <input type="radio" name="tutor_or_student" value="tutor"/><br/>
+                        <input type="radio" name="tutor_or_student" value="student"/><br/>
+                    </div>
+                    <FlatButton
+                        label="Submit"/>
+                </div>
+                }/>
         </div>);
     }
 });
@@ -236,7 +284,7 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<TutorMainPage/>,
+            current_page:<LoginPage/>,
             openSnackBar:false,
             message:""
         };
