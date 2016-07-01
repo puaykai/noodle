@@ -18,6 +18,9 @@ import Paper from 'material-ui/Paper';
 import FlatButton from 'material-ui/FlatButton';
 import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
 import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
+import {pinkA200, transparent} from 'material-ui/styles/colors';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import ContentAdd from 'material-ui/svg-icons/content/add';
 
 var $ = require('jquery');
 
@@ -48,22 +51,50 @@ var TutorList = React.createClass({
     getInitialState: function(){
         return {};
     },
+    getTutorListFromJson: function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                    leftAvatar={<Avatar src={jsonOb.source}/>}
+                    primaryText={jsonOb.name}/>
+            );
+        }));
+    },
     render: function(){
+    const style = {
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 5,
+        flex:1,
+        alignItems:'center',
+        justifyContent:'center'
+    };
+    const buttonStyle = {
+        marginRight: 20,
+    };
         return (
-            <div>
+            <div >
+            <div style={style}>
             <TextField
               hintText="Enter Tutor Id"
               floatingLabelText="Tutor Id"
-            /><br />
+            />
+    <FloatingActionButton mini={true} style={buttonStyle}>
+      <ContentAdd />
+    </FloatingActionButton>
+            <br />
+            </div>
+            <div style={style}>
+            <h4>My Tutors</h4><br/>
+            </div>
+            <div style={style}>
             <GenericList
                 menu_items={
-                [<ListItem
-                    primaryText="Lim Tian Heng"
-                    leftAvatar={<Avatar/>}
-                    />,
-                <ListItem/>,
-                <ListItem/>]
+                this.getTutorListFromJson([
+                {source:"", name:"Maurice Chng"}
+                ])
                 }/>
+                </div>
             </div>
         );
     }
@@ -83,10 +114,48 @@ var AssignmentsList = React.createClass({
     getInitialState: function(){
         return {};
     },
+    getAssignmentListFromJson:function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                    leftAvatar={<Avatar src={jsonOb.source}/>}
+                    primaryText={jsonOb.studentName}
+                    secondaryText={
+                        <p>
+                            <span>{jsonOb.assignmentName}</span>
+                        </p>
+                    }
+                    secondaryTextLines={2}/>
+            );
+        }));
+    },
     render: function(){
-        return (<div>
+
+    const styles = {
+        centerList: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 10,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+        }
+    };
+        return (
+        <div>
+        <div style={styles.centerList}><h4>Ungraded Assignments</h4></div>
+        <div style={styles.centerList}>
+                <TextField
+                  hintText="Filter"
+                /><br />
+        </div>
+        <div style={styles.centerList}>
         <GenericList
-            menu_items={[]}/>
+            menu_items={
+            this.getAssignmentListFromJson([
+                {source:"", studentName:"Poh Puay Kai", assignmentName:"Algebra"}
+            ])}/>
+        </div>
         </div>);
     }
 });
@@ -118,6 +187,34 @@ var StudentMainPage = React.createClass({
     getInitialState: function(){
         return {};
     },
+    getCompletedAssignmentsFromJson: function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                    primaryText={jsonOb.name}
+                    secondaryText={
+                        <p>
+                            <span>Due Date</span> :
+                            {jsonOb.marks}
+                        </p>
+                    }/>
+            );
+        }));
+    },
+    getDueAssignmentsFromJson: function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                    primaryText={jsonOb.name}
+                    secondaryText={
+                        <p>
+                            <span>Due Date</span> :
+                            {jsonOb.dueDate}
+                        </p>
+                    }/>
+            );
+        }));
+    },
     render: function(){
 
         const styles = {
@@ -127,20 +224,40 @@ var StudentMainPage = React.createClass({
             marginBottom: 12,
             fontWeight: 400,
           },
+          centerItem: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 20,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          },
+          centerList: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 10,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          }
 
         };
 
         return (
+        <div style={styles.centerList}>
   <Tabs>
     <Tab label="Due Assignments" >
         <GenericList
+            default_empty_message={"You do not have any due assignments."}
             menu_items={[]}/>
     </Tab>
     <Tab label="Completed Assignments" >
         <GenericList
+            default_empty_message={"You do not have any completed assignments"}
             menu_items={[]}/>
     </Tab>
   </Tabs>
+  </div>
         );
     }
 });
@@ -150,6 +267,39 @@ var StudentMainPage = React.createClass({
 var TutorMainPage = React.createClass({
     getInitialState: function(){
         return {};
+    },
+    getStudentListFromJson: function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                  leftAvatar={<Avatar src={jsonOb.source}/>}
+                  primaryText={jsonOb.name}
+                  secondaryText={
+                    <p>
+                      <span>Total score</span> :
+                      {jsonOb.totalScore}
+                    </p>
+                  }
+                  secondaryTextLines={2}
+                />
+            );
+        }));
+    },
+    getAssignmentListFromJson: function(jsonList){
+        return (jsonList.map(function(jsonOb){
+            return (
+                <ListItem
+                    primaryText={jsonOb.name}
+                    secondaryText={
+                        <p>
+                            <span>Total completed</span> :
+                            {jsonOb.totalCompleted}
+                        </p>
+                    }
+                  secondaryTextLines={2}
+                    />
+            );
+        }));
     },
     render: function(){
 
@@ -184,14 +334,25 @@ var TutorMainPage = React.createClass({
     <Tab label="Assignments" >
            <GenericList
                 default_empty_message={"You have not created any assignments yet."}
-                menu_items={[]}
+                menu_items={
+                this.getAssignmentListFromJson(
+                [
+                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
+                ]
+                )
+                }
                 />
     </Tab>
     <Tab label="Students" >
         <GenericList
             default_empty_message={"You do have any students yet."}
-            menu_items={[
-            ]}/>
+            menu_items={
+            this.getStudentListFromJson(
+            [
+//            {source:"", name:"Brendan Lim", totalScore:"10"}
+            ]
+            )
+            }/>
     </Tab>
   </Tabs>
   </div>
@@ -317,7 +478,7 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<TutorMainPage/>,
+            current_page:<AssignmentsList/>,
             openSnackBar:false,
             message:""
         };
