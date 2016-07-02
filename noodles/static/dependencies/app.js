@@ -21,6 +21,8 @@ import {getMuiTheme, MuiThemeProvider} from 'material-ui/styles';
 import {pinkA200, transparent} from 'material-ui/styles/colors';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
+import Divider from 'material-ui/Divider';
+import RaisedButton from 'material-ui/RaisedButton';
 
 var $ = require('jquery');
 
@@ -102,27 +104,85 @@ var TutorList = React.createClass({
     }
 });
 
-
-var Assignment = React.createClass({
+var NewAssignmentPage = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            questions:[]
+        };
     },
-    componentDidMount: function(){
-        AlloyEditor.editable("contentEditable", {
-		    container: 'editable'
-	    });
+    changeNumberOfQuestions: function(){
+        var numberOfQuestions = document.getElementById("numberOfQuestionsInAssignment").value;
+        const style = {
+            display: 'flex',
+            padding: 3,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+        };
+        var q = [];
+        for (var i = 0; i < numberOfQuestions; i++) {
+        var id_name = "editableContent"+i;
+          q.push(
+          <Paper style={style}
+                zDepth={2}
+                children={
+                    <div>
+                        <h4>Question {i}</h4>
+                        <div id={id_name} ref={
+                            function(input){
+                                if (input != null) { // This happens when object gets dereferenced
+                                    AlloyEditor.editable(input.id, {
+                                        container: 'editable'
+                                    });
+                                }
+                            }
+                        }>
+                            <h4>Click to edit this question</h4>
+                        </div>
+                        <TextField
+                            hintText="Maximum grade"
+                            floatingLabelText="Maximum points for this question"/>
+                    </div>
+                }/>
+                );
+        }
+        this.setState({questions:q});
     },
-    componentWillMount: function(){},
     render: function(){
-        return (<div id="contentEditable">
-                        <h1>AlloyEditor will make this content editable</h1>
-                    <p>
-                        To install React, follow the instructions on <a href="https://github.com/facebook/react/">GitHub</a>.
-                    </p>
-                    <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel metus nunc. Maecenas rhoncus congue faucibus. Sed finibus ultrices turpis. Mauris nulla ante, aliquam a euismod ut, scelerisque nec sem. Nam dapibus ac nulla non ullamcorper. Sed vestibulum a velit non lobortis. Proin sit amet imperdiet urna. Aenean interdum urna augue, vel mollis tortor dictum vitae. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Mauris vitae suscipit magna.
-                    </p>
-        </div>);
+        const style = {
+            display: 'flex',
+            padding: 3,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+        };
+        return (
+                <Paper style={style}
+                zDepth={1}
+                children={<div>
+                    <div style={style}>
+                        <TextField
+                          hintText="Enter Assignment Name"
+                          floatingLabelText="Click to set assignment name"
+                          floatingLabelFixed={true} />
+                        <DatePicker
+                            floatingLabelText="Assignment Due Date"
+                            hintText="Click to set assignment due date"
+                            mode="landscape" />
+                        <TextField
+                          id="numberOfQuestionsInAssignment"
+                          type="number"
+                          hintText="Enter Number of questions"
+                          floatingLabelText="Click to set number of questions"
+                          onChange={this.changeNumberOfQuestions}
+                          floatingLabelFixed={true} />
+                    </div>
+                    <div>
+                    {this.state.questions}
+                    </div>
+                    <div><RaisedButton label="Save" style={buttonStyle} /></div>
+                </div>}/>
+        );
     }
 });
 
@@ -177,24 +237,133 @@ var AssignmentsList = React.createClass({
 });
 
 
-var NewAssignmentPage = React.createClass({
+var Assignment = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            questions:this.props.questions,
+            currentPageNum:0,
+            currentPage:null
+        };
+    },
+    componentWillMount: function(){
+        if (this.props.questions.length > 0) {
+            this.setState({
+                currentPage:this.getObjectFromJson(
+                    this.state.questions[0]
+                )
+                });
+        }
+    },
+    getObjectFromJson: function(json){
+        const style = {
+            display: 'flex',
+            padding: 3,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+        };
+        const buttonStyle = {
+            margin: 12,
+        };
+        if(json.isAnswered && json.isGraded){ //for review only
+            var firstPart = (<div>
+                <h4>Answer:</h4>
+                <div>>{json.answer}</div></div>);
+            var secondPart = (
+                <div>
+                <h4>Comment:</h4>
+                    <div>
+                        <p>{json.score} of {json.maxScore}</p>
+                    </div>
+                    <div>
+                        <p>{json.comment}</p>
+                    </div>
+                </div>
+            );
+        } else if(json.isAnswered) { //isAnswered but not graded
+            var firstPart=(
+
+            <div><h4>Answer:</h4>
+            <div>{json.answer}</div></div>);
+            var hintText = "Enter a grade out of " + json.maxScore;
+            var content_id = "editableContent-"+this.state.currentPageNum;
+            var secondPart=(
+                <div>
+                <h4>Comment:</h4>
+                    <div>
+                        <TextField
+                            hintText={hintText}
+                            floatingLabelText="Enter score"
+                            floatingLabelFixed={true}
+                        />
+                    </div>
+                    <div>
+
+                        <div id={content_id} ref={
+                            function(input){
+                                if(input != null) {
+                                    AlloyEditor.editable(input.id, {
+                                        container: 'editable'
+                                    });
+                                }
+                            }
+                        }>
+                            <p>Click here to enter comment</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        } else { // is not answered, since once graded is considered answered
+
+            var content_id = "editableContent-"+this.state.currentPageNum;
+            var firstPart=(
+            <div>
+                <h4>Answer:</h4>
+                <div id={content_id} ref={
+                function(input){
+                    if(input != null) { // This happens when objects gets dereferenced
+                        AlloyEditor.editable(input.id, {
+                            container: 'editable'
+                        });
+                    }
+                }
+            }>
+            </div>
+            </div>);
+            var secondPart=(<div></div>);
+        }
+        return (
+        <Paper
+            style={style}
+            zDepth={1}
+            children={
+            <div>
+            <div>{json.question}</div>
+            <Divider/>
+            {firstPart}
+            <Divider/>
+            {secondPart}
+            <RaisedButton
+                label="Next"
+                style={buttonStyle}
+                onTouchEnd={this.goToNextPage}
+                onClick={this.goToNextPage}/>
+            </div>
+        }/>
+
+        );
+    },
+    goToNextPage: function(){
+        console.log("triggered go to next page");
+        var nextPageNumber = (this.state.currentPageNum + 1) % this.state.questions.length;
+        var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber]);
+        this.setState({
+            currentPageNum:nextPageNumber,
+            currentPage:nextQuestion
+        });
     },
     render: function(){
-        return (<div>
-        <DatePicker hintText="Click to select assignment due date"/><br/>
-        <TextField
-              hintText="Enter the name of the assignment"
-              floatingLabelText="Assignment Name"
-            /><br/>
-        <TextField
-              hintText="Enter the number of questions in this assignment"
-              floatingLabelText="Number of questions in assignment"
-            /><br/>
-        <GenericList
-              menu_items={[]}/>
-        </div>);
+        return (<div>{this.state.currentPage}</div>);
     }
 });
 
@@ -494,7 +663,11 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<Assignment/>,
+            current_page:<Assignment questions={[
+                {isAnswer:true, isGraded:true, answer:"Example answer 1", score:9, maxScore:10, comment:"Example comment 1"},
+                {isAnswer:true, isGraded:false, answer:"Example answer 2", score:8, maxScore:9, comment:"Example comment 2"},
+                {isAnswer:false, isGraded:false, answer:"Example answer 3", score:7, maxScore:8, comment:"Example comment 3"}
+            ]}/>,
             openSnackBar:false,
             message:""
         };
