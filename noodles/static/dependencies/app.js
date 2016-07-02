@@ -108,9 +108,8 @@ var Assignment = React.createClass({
         return {};
     },
     componentDidMount: function(){
-        console.log(document.getElementById("contentEditable"));
         AlloyEditor.editable("contentEditable", {
-		container: 'editable'
+		    container: 'editable'
 	    });
     },
     componentWillMount: function(){},
