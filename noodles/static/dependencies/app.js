@@ -24,6 +24,8 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 
 var $ = require('jquery');
 
+var AlloyEditor = require('alloyeditor');
+
 var GenericList = React.createClass({
     getInitialState: function(){
         return {
@@ -105,8 +107,23 @@ var Assignment = React.createClass({
     getInitialState: function(){
         return {};
     },
+    componentDidMount: function(){
+        console.log(document.getElementById("contentEditable"));
+        AlloyEditor.editable("contentEditable", {
+		container: 'editable'
+	    });
+    },
+    componentWillMount: function(){},
     render: function(){
-        return (<div>assignment</div>);
+        return (<div id="contentEditable">
+                        <h1>AlloyEditor will make this content editable</h1>
+                    <p>
+                        To install React, follow the instructions on <a href="https://github.com/facebook/react/">GitHub</a>.
+                    </p>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel metus nunc. Maecenas rhoncus congue faucibus. Sed finibus ultrices turpis. Mauris nulla ante, aliquam a euismod ut, scelerisque nec sem. Nam dapibus ac nulla non ullamcorper. Sed vestibulum a velit non lobortis. Proin sit amet imperdiet urna. Aenean interdum urna augue, vel mollis tortor dictum vitae. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Mauris vitae suscipit magna.
+                    </p>
+        </div>);
     }
 });
 
@@ -478,7 +495,7 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<AssignmentsList/>,
+            current_page:<Assignment/>,
             openSnackBar:false,
             message:""
         };
