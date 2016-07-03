@@ -15,14 +15,34 @@ var LoginPage = React.createClass({
     },
     submitForm: function(){
         // TODO AJAX
-        // TODO hide submit button and show spinner
-        if (this.state.persona == "tutor") {
-            var flag = "tutor_main";
-        } else if (this.state.persona == "student") {
-            var flag = "student_main";
+        var username = document.getElementById("user_input").value;
+        var password = document.getElementById("password_input").value;
+        if(username == null || username == "") {
+            this.props.displaySnackMessage("Please fill in your username");
+            return null;
         }
-        console.log("onsubmit triggered :" +flag);
-        this.props.changePage(flag);
+        if(password == null || password == "") {
+            this.props.displaySnackMessage("Please fill in your password");
+            return null;
+        }
+        // TODO hide submit button and show spinner
+        this.props.sendInfo(
+            "POST",
+            "/tuition/login",
+            {"username":username, "password":password}
+            ,
+            function(){
+                if (this.state.persona == "tutor") {
+                    var flag = "tutor_main";
+                } else if (this.state.persona == "student") {
+                    var flag = "student_main";
+                }
+                console.log("onsubmit triggered :" +flag);
+                this.props.changePage(flag);
+            },
+            "Login/Signup failed please try again later"
+        );
+
     },
     render: function(){
 
@@ -48,9 +68,11 @@ var LoginPage = React.createClass({
                 <div>
                     <h4>SignUp/Login</h4>
                     <TextField
+                        id="user_input"
                         hintText="Enter your username"
                         floatingLabelText="Username"/><br/>
                     <TextField
+                        id="password_input"
                         hintText="Enter your password"
                         floatingLabelText="Password"/><br/><br/>
                     <RadioButtonGroup

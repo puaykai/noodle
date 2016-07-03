@@ -15,6 +15,7 @@ import TutorList from './pages/tutor_list';
 import NewAssignmentPage from './pages/new_assignment';
 import AssignmentsList from './pages/assignment_list';
 import Assignment from './pages/assignment';
+import RequestingStudentsPage from './pages/requesting_students';
 
 var $ = require('jquery');
 
@@ -26,7 +27,8 @@ var App = React.createClass({
         return {
             current_page: <LoginPage
                             changePage={this.changePage}
-                            sendInfo={this.sendInfo}/>,
+                            sendInfo={this.sendInfo}
+                            displaySnackMessage={this.displaySnackMessage}/>,
             header: <Header
                         changePage={this.changePage}
                         sendInfo={this.sendInfo}
@@ -39,17 +41,38 @@ var App = React.createClass({
                                 onClick={function(){}}/>
                         ]}/>,
             openSnackBar:false,
-            message:""
+            message:"",
+            xhttp: new XMLHttpRequest()
         };
     },
     handleSnackOpen:function(){this.setState({openSnackBar:true})},
     handleSnackClose:function(){this.setState({openSnackBar:false})},
     changeSnackMessage:function(message){this.setState({message:message})},
-    sendInfo:function(url, message, callback, error_message){
-        //TODO run callback when success, display error message if fail
-        console.log("sending info : " + message + " url : " + url);
-        callback();
-        this.setState({openSnackBar:true, message:error_message});
+    displaySnackMessage:function(message){
+        this.setState({
+            openSnackBar:true,
+            message:message
+        });
+    },
+    sendInfo:function(method, url, message, callback, error_message){
+        var xhttp = this.state.xhttp;
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                callback();
+            } else if (xhttp.readyState == 4 && xhttp.status != 200) {
+                this.setState({openSnackBar:true, message:error_message});
+            } else if (xhttp.readyState != 4 ) {
+                // TODO blank out the whole website
+            }
+        }
+        xhttp.open(method, url, true);
+        var params = Object.keys(message).map(function(k){
+            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
+        }).join('&');
+        console.log(params);
+//        this.state.xhttp.send();
+// TODO handle csrf token
+
     },
     changePage: function(page_name){
         if (page_name == "tutor_main") {
@@ -81,6 +104,11 @@ var App = React.createClass({
                                 primaryText="Ungraded Assignment"
                                 onClick={function(){
                                     t.changePage("ungraded_assignment");
+                                }}/>,
+                            <MenuItem
+                                primaryText="Requesting Student"
+                                onClick={function(){
+                                    t.changePage("requesting_students");
                                 }}/>,
                             <MenuItem
                                 primaryText="Sign out"
@@ -142,7 +170,8 @@ var App = React.createClass({
             this.setState({
             "current_page":<LoginPage
                                 sendInfo={this.sendInfo}
-                                changePage={this.changePage}/>,
+                                changePage={this.changePage}
+                                displaySnackMessage={this.displaySnackMessage}/>,
             "header":<Header
                         sendInfo={this.sendInfo}
                         changePage={this.changePage}
@@ -168,6 +197,10 @@ var App = React.createClass({
                                             changePage={this.changePage}/>});
         } else if (page_name == "profile") {
             this.setState({"current_page":<Profile
+                                            sendInfo={this.sendInfo}
+                                            changePage={this.changePage}/>});
+        } else if (page_name == 'requesting_students') {
+            this.setState({"current_page":<RequestingStudentsPage
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}/>});
         }

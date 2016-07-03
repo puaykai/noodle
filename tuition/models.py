@@ -85,6 +85,7 @@ class Assignment(models.Model):
 class Student(models.Model):
     user = models.OneToOneField(User, related_name="student")
     assignments = models.ManyToManyField(Assignment, related_name="student_assignments")
+    requested_tutors = models.ManyToManyField(Tutor, related_name="requesting_students")
 
 
 class Answer(models.Model):
@@ -97,6 +98,6 @@ class Answer(models.Model):
 
 class Tutor(models.Model):
     user = models.OneToOneField(User, related_name="tutor")
-    students = models.ManyToManyField(Student, related_name="students")
+    accepted_students = models.ManyToManyField(Student, related_name="accepted_tutors")
     assignments = models.ManyToManyField(Assignment, related_name="tutor_assignments") # many to many so that later tutor can share assignment
 

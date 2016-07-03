@@ -46,6 +46,7 @@ var AssignmentsList = React.createClass({
         </div>
         <div style={styles.centerList}>
         <GenericList
+            default_empty_message="You have no assignments"
             menu_items={
             this.getAssignmentListFromJson([
                 {source:"", studentName:"Poh Puay Kai", assignmentName:"Algebra"}
