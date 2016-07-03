@@ -156,6 +156,9 @@ var NewAssignmentPage = React.createClass({
             alignItems:'center',
             justifyContent:'center'
         };
+        const buttonStyle = {
+            margin: 12
+        };
         return (
                 <Paper style={style}
                 zDepth={1}
@@ -367,6 +370,14 @@ var Assignment = React.createClass({
     }
 });
 
+var LeaderBoard = React.createClass({
+    getInitialState: function(){
+        return {};
+    },
+    render: function(){
+        return (<div>Page under construction</div>);
+    }
+});
 
 var StudentMainPage = React.createClass({
     getInitialState: function(){
@@ -551,6 +562,11 @@ var Header = React.createClass({
             header_title:""
         };
     },
+    handleSignOut: function(){
+        // TODO hide sign out and show spinner
+        // TODO AJAX to server
+        this.props.changePage("login");
+    },
     render: function(){
         return (
   <AppBar
@@ -564,9 +580,10 @@ var Header = React.createClass({
         targetOrigin={{horizontal: 'right', vertical: 'top'}}
         anchorOrigin={{horizontal: 'right', vertical: 'top'}}
       >
-        <MenuItem primaryText="Refresh" />
-        <MenuItem primaryText="Help" />
-        <MenuItem primaryText="Sign out" />
+        {this.props.menuItems}
+        <MenuItem
+            primaryText="Sign out"
+            onClick={this.handleSignOut}/>
       </IconMenu>
     }
   />
@@ -579,29 +596,22 @@ var Footer = React.createClass({
         return {};
     },
     render: function(){
+    console.log("loading footer");
+        const style = {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 10,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+        }
+
         return (
-<footer id="main-footer">
-	<div class="container">
-		<div id="logos">
-			<a rel="nofollow" target="_blank" href="https://www.mcafeesecure.com/RatingVerify?ref=www.elegantthemes.com"></a>
-			<a rel="nofollow" target="_blank" href="https://safeweb.norton.com/report/show?url=www.elegantthemes.com"></a>
-			<a rel="nofollow" target="_blank" href="http://www.bbb.org/greater-san-francisco/business-reviews/web-design/elegant-themes-in-san-francisco-ca-376238"></a>
-		</div>
-		<div id="copyright">
-			<a id="facebook" href="http://www.facebook.com/elegantthemes/">65,289 <span>followers</span></a>
-			<a id="twitter" href="http://www.twitter.com/elegantthemes/">30,323 <span>followers</span></a>
-			<a id="email" href="http://www.elegantthemes.com/newsletter.html">207,907 <span>followers</span></a>
-		</div>
-	</div>
-	<ul id="bottom-menu">
-		<li><a href="http://www.elegantthemes.com/about/">About Us</a></li>
-		<li><a href="http://www.elegantthemes.com/affiliates/">Affiliates</a></li>
-		<li><a href="http://www.elegantthemes.com/careers/">Careers</a></li>
-		<li><a href="http://www.elegantthemes.com/privacy.html">Privacy Policy</a></li>
-		<li><a href="http://www.elegantthemes.com/terms.html">Terms &amp; Conditions</a></li>
-	</ul>
-	<p id="company_copyright">Copyright © 2016 Elegant Themes ®</p>
-</footer>
+            <div style={style}>
+                <a>About us</a>
+                <a>Terms of use</a>
+                <a>Careers</a>
+            </div>
         );
     }
 });
@@ -609,7 +619,23 @@ var Footer = React.createClass({
 
 var LoginPage = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            persona:"tutor"
+        };
+    },
+    changeRadioButton: function(event, string){
+        this.setState({persona:string});
+    },
+    submitForm: function(){
+        // TODO AJAX
+        // TODO hide submit button and show spinner
+        if (this.state.persona == "tutor") {
+            var flag = "tutor_main";
+        } else if (this.state.persona == "student") {
+            var flag = "student_main";
+        }
+        console.log("onsubmit triggered :" +flag);
+        this.props.changePage(flag);
     },
     render: function(){
 
@@ -640,20 +666,24 @@ var LoginPage = React.createClass({
                     <TextField
                         hintText="Enter your password"
                         floatingLabelText="Password"/><br/><br/>
-                    <RadioButtonGroup name="shipSpeed" defaultSelected="not_light">
+                    <RadioButtonGroup
+                        name="tutorStudent"
+                        defaultSelected="tutor"
+                        onChange={this.changeRadioButton}>
                       <RadioButton
-                        value="light"
                         label="I am a tutor"
+                        value="tutor"
                         style={styles.radioButton}
                       />
                       <RadioButton
-                        value="not_light"
                         label="I am a student"
+                        value="student"
                         style={styles.radioButton}
                       />
                     </RadioButtonGroup>
                     <FlatButton
-                        label="Submit"/>
+                        label="Submit"
+                        onClick={this.submitForm}/>
                 </div>
         </div>);
     }
@@ -663,11 +693,8 @@ var App = React.createClass({
     componentDidMount: function(){},
     getInitialState: function(){
         return {
-            current_page:<Assignment questions={[
-                {isAnswer:true, isGraded:true, answer:"Example answer 1", score:9, maxScore:10, comment:"Example comment 1"},
-                {isAnswer:true, isGraded:false, answer:"Example answer 2", score:8, maxScore:9, comment:"Example comment 2"},
-                {isAnswer:false, isGraded:false, answer:"Example answer 3", score:7, maxScore:8, comment:"Example comment 3"}
-            ]}/>,
+            current_page: <LoginPage changePage={this.changePage}/>,
+            header: <Header changePage={this.changePage}/>,
             openSnackBar:false,
             message:""
         };
@@ -677,22 +704,74 @@ var App = React.createClass({
     changeSnackMessage:function(message){this.setState({message:message})},
     changePage: function(page_name){
         if (page_name == "tutor_main") {
-            this.setState({"current_page":<TutorMainPage/>});
+            var t = this;
+            this.setState({
+            "current_page":<TutorMainPage changePage={this.changePage}/>,
+            "header":<Header
+                        changePage={this.changePage}
+                        menuItems={[
+                            <MenuItem
+                                primaryText="Main"
+                                onClick={function(){
+                                    t.changePage("tutor_main");
+                                }}/>,
+                            <MenuItem
+                                primaryText="New Assignment"
+                                onClick={function(){
+                                    t.changePage("new_assignment");
+                                }}/>,
+                            <MenuItem
+                                primaryText="Ungraded Assignment"
+                                onClick={function(){
+                                    t.changePage("ungraded_assignment");
+                                }}/>
+                        ]}/>
+            });
         } else if (page_name == "student_main") {
-            this.setState({"current_page":<StudentMainPage/>});
+            var t = this;
+            this.setState({
+            "current_page":<StudentMainPage changePage={this.changePage}/>,
+            "header":<Header
+                        changePage={this.changePage}
+                        menuItems={[
+                            <MenuItem
+                                primaryText="Main"
+                                onClick={function(){
+                                    t.changePage("student_main");
+                                }}/>,
+                            <MenuItem
+                                primaryText="LeaderBoard"
+                                onClick={function(){
+                                    t.changePage("leaderboard");
+                                }}/>,
+                            <MenuItem
+                                primaryText="Tutors"
+                                onClick={function(){
+                                    t.changePage("tutor_list");
+                                }}/>
+                        ]}/>
+            });
         } else if (page_name == "new_assignment") {
-            this.setState({"current_page":<NewAssignmentPage/>});
+            this.setState({"current_page":<NewAssignmentPage changePage={this.changePage}/>});
         } else if (page_name == "assignment_list") {
-            this.setState({"current_page":<AssignmentsList/>});
+            this.setState({"current_page":<AssignmentsList changePage={this.changePage}/>});
         } else if (page_name == "assignment") {
-            this.setState({"current_page":<Assignment/>});
+            this.setState({"current_page":<Assignment changePage={this.changePage}/>});
+        } else if (page_name == "login") {
+            this.setState({"current_page":<LoginPage changePage={this.changePage}/>});
+        } else if (page_name == "ungraded_assignment") {
+            this.setState({"current_page":<Assignment changePage={this.changePage}/>});
+        } else if (page_name == "leaderboard") {
+            this.setState({"current_page":<LeaderBoard changePage={this.changePage}/>});
+        } else if (page_name == "tutor_list") {
+            this.setState({"current_page":<TutorList changePage={this.changePage}/>});
         }
     },
     render: function(){
         return (
             <MuiThemeProvider muiTheme={getMuiTheme()}>
                 <div>
-                    <Header/>
+                    {this.state.header}
                     {this.state.current_page}
                     <Footer/>
                     <Snackbar
