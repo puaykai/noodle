@@ -21,8 +21,26 @@ var $ = require('jquery');
 
 var AlloyEditor = require('alloyeditor');
 
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = $.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 var App = React.createClass({
-    componentDidMount: function(){},
+    componentDidMount: function(){
+//        this.setState({csrfmiddlewaretoken:getCookie('csrftoken')});
+    },
     getInitialState: function(){
         return {
             current_page: <LoginPage
@@ -42,7 +60,8 @@ var App = React.createClass({
                         ]}/>,
             openSnackBar:false,
             message:"",
-            xhttp: new XMLHttpRequest()
+            xhttp: new XMLHttpRequest(),
+            csrfmiddlewaretoken:""
         };
     },
     handleSnackOpen:function(){this.setState({openSnackBar:true})},
@@ -54,24 +73,28 @@ var App = React.createClass({
             message:message
         });
     },
-    sendInfo:function(method, url, message, callback, error_message){
+    sendInfo:function(method, url, message, callback, error_callback){
         var xhttp = this.state.xhttp;
+        var t = this;
         xhttp.onreadystatechange = function() {
             if (xhttp.readyState == 4 && xhttp.status == 200) {
                 callback();
             } else if (xhttp.readyState == 4 && xhttp.status != 200) {
-                this.setState({openSnackBar:true, message:error_message});
+                error_callback();
             } else if (xhttp.readyState != 4 ) {
                 // TODO blank out the whole website
             }
         }
+        var token = getCookie('csrftoken');
         xhttp.open(method, url, true);
         var params = Object.keys(message).map(function(k){
             return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
         }).join('&');
         console.log(params);
-//        this.state.xhttp.send();
-// TODO handle csrf token
+        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        this.state.xhttp.setRequestHeader("X-CSRFToken", token);
+        this.state.xhttp.send(params);
+// TODO handle csrf token return, update
 
     },
     changePage: function(page_name){
@@ -113,7 +136,19 @@ var App = React.createClass({
                             <MenuItem
                                 primaryText="Sign out"
                                 onClick={function(){
-                                    t.changePage("login");
+                                    t.sendInfo(
+                                        "POST",
+                                        "/tuition/logout/",
+                                        {},
+                                        function(){
+                                            t.changePage("login");
+                                            t.displaySnackMessage("Logout was successful");
+                                        },
+                                        function(){
+                                            t.displaySnackMessage("Logout was not successful") ;
+                                        }
+                                    );
+
                                 }}/>
                         ]}/>
             });
@@ -147,6 +182,7 @@ var App = React.createClass({
                                 onClick={function(){
                                     t.changePage("tutor_list");
                                 }}/>,
+                            <SignOutMenuButton mainApp={t}/>,
                             <MenuItem
                                 primaryText="Sign out"
                                 onClick={function(){

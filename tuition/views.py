@@ -3,10 +3,11 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from models import Tutor, Student, Assignment, Question
-from json import loads
+from json import loads, dumps
 
 
 def signup_login(request):
+    print "method : %s and POST : %s" % (request.method, request.POST)
     if request.method == "POST" and request.POST.get('username') and request.POST.get('password'):
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -26,7 +27,7 @@ def signup_login(request):
                 user.save()
             except:
                 return HttpResponse("KEY_CREATE_USER_FAILED", status=400)
-            if request.POST.get('is_tutor'):
+            if request.POST.get('is_tutor') == '0':
                 try:
                     tutor = Tutor(user=user)
                     tutor.save()
@@ -40,6 +41,8 @@ def signup_login(request):
                     return HttpResponse("KEY_CREATE_STUDENT_FAILED", status=400)
             login(request, user)
             return HttpResponse("KEY_CREATE_USER_SUCCESS", status=200)
+    else:
+        return HttpResponse("KEY_BAD_REQUEST", status=400)
 
 @login_required
 def my_logout(request):
@@ -124,7 +127,15 @@ def get_leaderboard(request):
 
 @login_required
 def get_tutors(request):
-    pass
+    if request.method == "GET":
+        try:
+            student = Student.objects.get(user=request.user)
+        except:
+            return HttpResponse('KEY_NO_SUCH_STUDENT', status=400)
+        return HttpResponse(dumps({
+            "confirmed_tutors": Student.get_confirmed_tutors(student),
+            "pending_tutors": Student.get_pending_tutors(student)
+        }), status=200)
 
 @login_required
 def add_tutor(request):
@@ -145,7 +156,11 @@ def add_tutor(request):
 
 @login_required
 def get_requesting_students(request):
-    pass
+    try:
+        tutor = Tutor.objects.get(user=request.user)
+    except:
+        return HttpResponse('KEY_NOT_A_TUTOR', status=400)
+    return Tutor.get_requesting_students(tutor)
 
 @login_required
 def accept_student(request):

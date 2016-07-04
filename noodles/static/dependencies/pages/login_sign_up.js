@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
+import CircularProgress from 'material-ui/CircularProgress';
 
 var LoginPage = React.createClass({
     getInitialState: function(){
@@ -25,22 +26,32 @@ var LoginPage = React.createClass({
             this.props.displaySnackMessage("Please fill in your password");
             return null;
         }
+        if(this.state.persona == "tutor") {
+            var is_tutor = 0;
+        } else {
+            var is_tutor = 1;
+        }
         // TODO hide submit button and show spinner
+        document.getElementById("loginSignUpSubmitButton").style.display = 'none';
+        document.getElementById("loginSignUpSubmitSpinner").style.display = 'block';
+        var t = this;
         this.props.sendInfo(
             "POST",
-            "/tuition/login",
-            {"username":username, "password":password}
+            "/tuition/login/",
+            {"username":username, "password":password, "is_tutor":is_tutor}
             ,
             function(){
-                if (this.state.persona == "tutor") {
+                if (t.state.persona == "tutor") {
                     var flag = "tutor_main";
-                } else if (this.state.persona == "student") {
+                } else if (t.state.persona == "student") {
                     var flag = "student_main";
                 }
-                console.log("onsubmit triggered :" +flag);
-                this.props.changePage(flag);
+                t.props.displaySnackMessage("Login / Signup was successful");
+                t.props.changePage(flag);
             },
-            "Login/Signup failed please try again later"
+            function(){
+                t.props.displaySnackMessage("Login / Signup was not successful ");
+            }
         );
 
     },
@@ -73,6 +84,7 @@ var LoginPage = React.createClass({
                         floatingLabelText="Username"/><br/>
                     <TextField
                         id="password_input"
+                        type="password"
                         hintText="Enter your password"
                         floatingLabelText="Password"/><br/><br/>
                     <RadioButtonGroup
@@ -90,7 +102,15 @@ var LoginPage = React.createClass({
                         style={styles.radioButton}
                       />
                     </RadioButtonGroup>
+                    <CircularProgress
+                        id="loginSignUpSubmitSpinner"
+                        ref={function(input){
+                            if(input != null) {
+                                document.getElementById("loginSignUpSubmitSpinner").style.display="none";
+                            }
+                        }}/>
                     <RaisedButton
+                        id="loginSignUpSubmitButton"
                         label="Submit"
                         onClick={this.submitForm}/>
                 </div>
