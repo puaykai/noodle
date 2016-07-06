@@ -288,9 +288,24 @@ var App = React.createClass({
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}/>});
         } else if (page_name == "tutor_list") {
+            var tutorList = [];
+            var t = this;
+            this.sendInfo(
+                "GET",
+                "/tuition/get_tutors/",
+                {},
+                function(xhttp){
+                    tutorList = JSON.parse(xhttp.responseContent);
+                },
+                function(xhttp){
+                    t.displaySnackMessage("Did not manage to get snack message");
+                }
+            );
             this.setState({"current_page":<TutorList
                                             sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
+                                            changePage={this.changePage}
+                                            displaySnackMessage={this.displaySnackMessage}
+                                            tutorList={tutorList}/>});
         } else if (page_name == "profile") {
             this.setState({"current_page":<Profile
                                             sendInfo={this.sendInfo}
