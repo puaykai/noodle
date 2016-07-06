@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import Avatar from 'material-ui/Avatar';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import ListItem from 'material-ui/List';
+import List from 'material-ui/List';
 import GenericList from './list_components';
 
 var TutorMainPage = React.createClass({
@@ -50,7 +51,7 @@ var TutorMainPage = React.createClass({
           }
         };
         return (jsonList.map(function(jsonOb){
-        console.log(jsonOb);
+        console.log("assignment object : name : " + jsonOb.name + " totalCOmpleted : " + jsonOb.totalCompleted);
             return (
                 <ListItem
                     style={styles.centerItem}

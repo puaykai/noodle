@@ -84,11 +84,11 @@ class Student(models.Model):
 
     @classmethod
     def get_confirmed_tutors(cls, student):
-        return serializers.serialize('json', student.accepted_tutors)
+        return serializers.serialize('json', student.accepted_tutors.all())
 
     @classmethod
     def get_pending_tutors(cls, student):
-        return serializers.serialize('json', student.requested_tutors)
+        return serializers.serialize('json', student.requested_tutors.all())
 
     @classmethod
     def get_due_assignments(cls, student):

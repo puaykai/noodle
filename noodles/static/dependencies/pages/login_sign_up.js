@@ -15,7 +15,6 @@ var LoginPage = React.createClass({
         this.setState({persona:string});
     },
     submitForm: function(){
-        // TODO AJAX
         var username = document.getElementById("user_input").value;
         var password = document.getElementById("password_input").value;
         if(username == null || username == "") {
@@ -31,7 +30,6 @@ var LoginPage = React.createClass({
         } else {
             var is_tutor = 1;
         }
-        // TODO hide submit button and show spinner
         document.getElementById("loginSignUpSubmitButton").style.display = 'none';
         document.getElementById("loginSignUpSubmitSpinner").style.display = 'block';
         var t = this;
@@ -41,6 +39,11 @@ var LoginPage = React.createClass({
             {"username":username, "password":password, "is_tutor":is_tutor}
             ,
             function(xhttp){
+                if (xhttp.responseContent == "KEY_IS_A_TUTOR") {
+                    t.setState({persona:"tutor"});
+                } else {
+                    t.setState({persona:"student"});
+                }
                 if (t.state.persona == "tutor") {
                     var flag = "tutor_main";
                 } else if (t.state.persona == "student") {

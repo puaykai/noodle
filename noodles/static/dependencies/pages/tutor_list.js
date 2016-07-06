@@ -32,14 +32,42 @@ var TutorList = React.createClass({
     const buttonStyle = {
         marginRight: 20,
     };
+    var t = this;
         return (
             <div >
             <div style={style}>
             <TextField
+              id="tutor_number_input"
+              type="number"
               hintText="Enter Tutor Id"
               floatingLabelText="Tutor Id"
             />
-    <FloatingActionButton mini={true} style={buttonStyle}>
+    <FloatingActionButton
+        mini={true}
+        style={buttonStyle}
+        onClick={function(){
+          var tutor_id = document.getElementById("tutor_number_input").value;
+          console.log("tutor id "+tutor_id);
+          t.props.sendInfo(
+              "POST",
+              "/tuition/add_tutor/",
+              {"tutor_id":tutor_id},
+              function(xhttp){
+                  t.props.displaySnackMessage("You have successfully added tutor id : " + tutor_id);
+              },
+              function(xhttp){
+                console.log(xhttp.responseContent);
+                  if (xhttp.responseContent == "KEY_NO_SUCH_TUTOR") {
+                      t.props.displaySnackMessage("There is no tutor with id : "+tutor_id);
+                  } else if (xhttp.responseContent == "KEY_NO_SUCH_STUDENT") {
+                      t.props.displaySnackMessage("Please refresh and login again");
+                  } else if (xhttp.responseContent == "KEY_BAD_RESPONSE") {
+                      t.props.displaySnackMessage("You have send a bad response. Please try again");
+                  }
+             }
+          );
+        }}
+        >
       <ContentAdd />
     </FloatingActionButton>
             <br />

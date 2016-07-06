@@ -16,7 +16,10 @@ def signup_login(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    return HttpResponse("KEY_LOGIN_SUCCESS", status=200)
+                    if Tutor.objects.filter(user=user).exists():
+                        return HttpResponse("KEY_IS_A_TUTOR", status=200)
+                    else:
+                        return HttpResponse("KEY_IS_A_STUDENT", status=200)
                 else:
                     return HttpResponse("KEY_USER_ACCOUNT_DISABLED", status=400)
             else:
@@ -180,7 +183,8 @@ def get_tutors(request):
 
 @login_required
 def add_tutor(request):
-    if request.method == "POST" and request.POST.get('tutor_id') and request.user:
+    if request.method == "POST" and request.body and request.user:
+        request.POST = loads(request.body)
         try:
             tutor = Tutor.objects.get(id=request.POST.get('tutor_id'))
         except:
@@ -190,7 +194,6 @@ def add_tutor(request):
         except:
             return HttpResponse('KEY_NO_SUCH_STUDENT', status=400)
         student.requested_tutors.add(tutor)
-        student.save()
         return HttpResponse("KEY_ADD_TUTOR_SUCCESSFUL", status=200)
     else:
         return HttpResponse('KEY_BAD_RESPONSE', status=400)
