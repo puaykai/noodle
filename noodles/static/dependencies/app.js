@@ -38,9 +38,7 @@ function getCookie(name) {
 }
 
 var App = React.createClass({
-    componentDidMount: function(){
-//        this.setState({csrfmiddlewaretoken:getCookie('csrftoken')});
-    },
+    componentDidMount: function(){},
     getInitialState: function(){
         return {
             current_page: <LoginPage
@@ -60,8 +58,7 @@ var App = React.createClass({
                         ]}/>,
             openSnackBar:false,
             message:"",
-            xhttp: new XMLHttpRequest(),
-            csrfmiddlewaretoken:""
+            xhttp: new XMLHttpRequest()
         };
     },
     handleSnackOpen:function(){this.setState({openSnackBar:true})},
@@ -78,32 +75,55 @@ var App = React.createClass({
         var t = this;
         xhttp.onreadystatechange = function() {
             if (xhttp.readyState == 4 && xhttp.status == 200) {
-                callback();
+                callback(xhttp);
             } else if (xhttp.readyState == 4 && xhttp.status != 200) {
-                error_callback();
+                error_callback(xhttp);
             } else if (xhttp.readyState != 4 ) {
                 // TODO blank out the whole website
             }
         }
         var token = getCookie('csrftoken');
         xhttp.open(method, url, true);
-        var params = Object.keys(message).map(function(k){
-            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
-        }).join('&');
-        console.log(params);
-        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//        var params = Object.keys(message).map(function(k){
+//            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
+//        }).join('&');
+//        console.log(params);
+//        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        this.state.xhttp.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
-        this.state.xhttp.send(params);
-// TODO handle csrf token return, update
-
+        this.state.xhttp.send(JSON.stringify(message));
     },
     changePage: function(page_name){
         if (page_name == "tutor_main") {
             var t = this;
+            var studentList = [];
+            var assignmentList = [];
+            this.sendInfo(
+                "GET",
+                "/tuition/get_ungraded_assignments/",
+                function(xhttp){
+                    assignmentList = JSON.parse(xhttp.responseContent);
+                },
+                function(xhttp){
+                    t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
+                }
+            );
+            this.sendInfo(
+                "GET",
+                "/tuition/get_students/",
+                function(xhttp){
+                    studentList = JSON.parse(xhttp.responseContent);
+                },
+                function(xhttp){
+                    t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.")
+                }
+            );
             this.setState({
             "current_page":<TutorMainPage
                                 changePage={this.changePage}
-                                sendInfo={this.sendInfo} />,
+                                sendInfo={this.sendInfo}
+                                studentList={studentList}
+                                assignmentList={assignmentList}/>,
             "header":<Header
                         changePage={this.changePage}
                         sendInfo={this.sendInfo}
@@ -154,6 +174,24 @@ var App = React.createClass({
             });
         } else if (page_name == "student_main") {
             var t = this;
+            // TODO
+            this.sendInfo(
+                "GET",
+                "/tuition/get_due_assignments/",
+                function(xhttp){// TODO
+                },
+                function(xhttp){// TODO
+                }
+            );
+            // TODO
+            this.sendInfo(
+                "GET",
+                "/tuition/get_completed_assignments/",
+                function(xhttp){// TODO
+                },
+                function(xhttp){// TODO
+                }
+            );
             this.setState({
             "current_page":<StudentMainPage
                                 changePage={this.changePage}
@@ -182,23 +220,45 @@ var App = React.createClass({
                                 onClick={function(){
                                     t.changePage("tutor_list");
                                 }}/>,
-                            <SignOutMenuButton mainApp={t}/>,
                             <MenuItem
                                 primaryText="Sign out"
                                 onClick={function(){
-                                    t.changePage("login");
+                                    t.sendInfo(
+                                        "POST",
+                                        "/tuition/logout/",
+                                        {},
+                                        function(){
+                                            t.changePage("login");
+                                            t.displaySnackMessage("Logout was successful");
+                                        },
+                                        function(){
+                                            t.displaySnackMessage("Logout was not successful") ;
+                                        }
+                                    );
+
                                 }}/>
                         ]}/>
             });
         } else if (page_name == "new_assignment") {
             this.setState({"current_page":<NewAssignmentPage
                                             sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
+                                            changePage={this.changePage}
+                                            displaySnackMessage={this.displaySnackMessage}/>});
         } else if (page_name == "assignment_list") {
+            // TODO
+            this.sendInfo(
+                "GET",
+                "/tuition/get_assignments/",
+                function(xhttp){// TODO
+                },
+                function(xhttp){// TODO
+                }
+            );
             this.setState({"current_page":<AssignmentsList
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}/>});
         } else if (page_name == "assignment") {
+            //TODO
             this.setState({"current_page":<Assignment
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}/>});

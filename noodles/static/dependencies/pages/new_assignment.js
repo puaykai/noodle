@@ -4,6 +4,7 @@ import Paper from 'material-ui/Paper';
 import TextField from 'material-ui/TextField';
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
+import CircularProgress from 'material-ui/CircularProgress';
 
 var $ = require('jquery');
 
@@ -26,7 +27,7 @@ var NewAssignmentPage = React.createClass({
         };
         var q = [];
         for (var i = 0; i < numberOfQuestions; i++) {
-        var id_name = "editableContent"+i;
+        var id_name = "newAssignmentEditableContent"+i;
           q.push(
           <Paper style={style}
                 zDepth={2}
@@ -45,6 +46,8 @@ var NewAssignmentPage = React.createClass({
                             <h4>Click to edit this question</h4>
                         </div>
                         <TextField
+                            id={"grade"+id_name}
+                            type="number"
                             hintText="Maximum grade"
                             floatingLabelText="Maximum points for this question"/>
                     </div>
@@ -52,6 +55,47 @@ var NewAssignmentPage = React.createClass({
                 );
         }
         this.setState({questions:q});
+    },
+    saveAssignment: function(){
+        document.getElementById("new_assignment_save_button_id").style.display="none";
+        document.getElementById("new_assignment_progress_circle_id").style.display="block";
+        var q = []
+        for (var i=0; i<this.state.questions.length; i++) {
+            var id_name = "newAssignmentEditableContent"+i;
+            var grade_id_name = "gradenewAssignmentEditableContent"+i;
+            q.push({
+                "content":document.getElementById(id_name).textContent,
+                "maximum_grade":document.getElementById(grade_id_name).value
+            });
+        }
+        var t = this;
+        this.props.sendInfo(
+            "POST",
+            "/tuition/new_assignment/",
+            {
+                "questions":q
+            },
+            function(xhttp){
+                t.props.displaySnackMessage("Your assignment has been saved!");
+                document.getElementById("new_assignment_save_button_id").style.display="block";
+                document.getElementById("new_assignment_progress_circle_id").style.display="none";
+            },
+            function(xhttp){
+                var msg = "";
+                if (xhttp.responseContent == "KEY_NOT_A_TUTOR") {
+                    msg = "You are not a tutor. Please login again";
+                    t.props.displaySnackMessage(msg);
+                    t.props.changePage("login")
+                } else if (xhttp.responseContent == "KEY_EMPTY_ASSIGNMENT_DICTIONARY") {
+                    msg = "You did not have any questions";
+                } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
+                    msg = "You sent a bad request";
+                }
+                t.props.displaySnackMessage(msg);
+                document.getElementById("new_assignment_save_button_id").style.display="block";
+                document.getElementById("new_assignment_progress_circle_id").style.display="none";
+            }
+        );
     },
     render: function(){
         const style = {
@@ -71,6 +115,7 @@ var NewAssignmentPage = React.createClass({
                     <div style={style}>
                         <TextField
                           hintText="Enter Assignment Name"
+                          maxlength="255"
                           floatingLabelText="Click to set assignment name"
                           floatingLabelFixed={true} />
                         <DatePicker
@@ -88,7 +133,24 @@ var NewAssignmentPage = React.createClass({
                     <div>
                     {this.state.questions}
                     </div>
-                    <div><RaisedButton label="Save" style={buttonStyle} /></div>
+                    <div>
+                    <div
+                        id="new_assignment_save_button_id">
+                    <RaisedButton
+                        label="Save"
+                        style={buttonStyle}
+                        onClick={this.saveAssignment}/>
+                    </div>
+                    <div
+                        id="new_assignment_progress_circle_id">
+                    <CircularProgress
+                        ref={function(input){
+                            if(input != null) {
+                                document.getElementById("new_assignment_progress_circle_id").style.display="none";
+                            }
+                        }}/>
+                    </div>
+                    </div>
                 </div>}/>
         );
     }

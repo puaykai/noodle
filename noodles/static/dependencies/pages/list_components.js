@@ -10,7 +10,7 @@ var GenericList = React.createClass({
     render: function(){
     console.log("length of menu_items : " + this.props.menu_items.length);
     console.log("default message : " + this.props.default_empty_message);
-    console.log("menu_items : "+ this.props.menu_items);
+    console.log("menu_items : "+ this.props.menu_items[0]);
         if (this.props.menu_items.length > 0){
             return (
                 <List>

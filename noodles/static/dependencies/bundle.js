@@ -94,9 +94,7 @@ function getCookie(name) {
 var App = _react2.default.createClass({
     displayName: 'App',
 
-    componentDidMount: function componentDidMount() {
-        //        this.setState({csrfmiddlewaretoken:getCookie('csrftoken')});
-    },
+    componentDidMount: function componentDidMount() {},
     getInitialState: function getInitialState() {
         return {
             current_page: _react2.default.createElement(_login_sign_up2.default, {
@@ -113,8 +111,7 @@ var App = _react2.default.createClass({
                     onClick: function onClick() {} })] }),
             openSnackBar: false,
             message: "",
-            xhttp: new XMLHttpRequest(),
-            csrfmiddlewaretoken: ""
+            xhttp: new XMLHttpRequest()
         };
     },
     handleSnackOpen: function handleSnackOpen() {
@@ -137,31 +134,45 @@ var App = _react2.default.createClass({
         var t = this;
         xhttp.onreadystatechange = function () {
             if (xhttp.readyState == 4 && xhttp.status == 200) {
-                callback();
+                callback(xhttp);
             } else if (xhttp.readyState == 4 && xhttp.status != 200) {
-                error_callback();
+                error_callback(xhttp);
             } else if (xhttp.readyState != 4) {
                 // TODO blank out the whole website
             }
         };
         var token = getCookie('csrftoken');
         xhttp.open(method, url, true);
-        var params = Object.keys(message).map(function (k) {
-            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
-        }).join('&');
-        console.log(params);
-        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        //        var params = Object.keys(message).map(function(k){
+        //            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
+        //        }).join('&');
+        //        console.log(params);
+        //        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        this.state.xhttp.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
-        this.state.xhttp.send(params);
-        // TODO handle csrf token return, update
+        this.state.xhttp.send(JSON.stringify(message));
     },
     changePage: function changePage(page_name) {
         if (page_name == "tutor_main") {
             var t = this;
+            var studentList = [];
+            var assignmentList = [];
+            this.sendInfo("GET", "/tuition/get_ungraded_assignments/", function (xhttp) {
+                assignmentList = JSON.parse(xhttp.responseContent);
+            }, function (xhttp) {
+                t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
+            });
+            this.sendInfo("GET", "/tuition/get_students/", function (xhttp) {
+                studentList = JSON.parse(xhttp.responseContent);
+            }, function (xhttp) {
+                t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.");
+            });
             this.setState({
                 "current_page": _react2.default.createElement(_tutor_pages2.default, {
                     changePage: this.changePage,
-                    sendInfo: this.sendInfo }),
+                    sendInfo: this.sendInfo,
+                    studentList: studentList,
+                    assignmentList: assignmentList }),
                 "header": _react2.default.createElement(_header2.default, {
                     changePage: this.changePage,
                     sendInfo: this.sendInfo,
@@ -198,6 +209,14 @@ var App = _react2.default.createClass({
             });
         } else if (page_name == "student_main") {
             var t = this;
+            // TODO
+            this.sendInfo("GET", "/tuition/get_due_assignments/", function (xhttp) {// TODO
+            }, function (xhttp) {// TODO
+            });
+            // TODO
+            this.sendInfo("GET", "/tuition/get_completed_assignments/", function (xhttp) {// TODO
+            }, function (xhttp) {// TODO
+            });
             this.setState({
                 "current_page": _react2.default.createElement(_student_pages2.default, {
                     changePage: this.changePage,
@@ -221,21 +240,32 @@ var App = _react2.default.createClass({
                         primaryText: 'Tutors',
                         onClick: function onClick() {
                             t.changePage("tutor_list");
-                        } }), _react2.default.createElement(SignOutMenuButton, { mainApp: t }), _react2.default.createElement(_MenuItem2.default, {
+                        } }), _react2.default.createElement(_MenuItem2.default, {
                         primaryText: 'Sign out',
                         onClick: function onClick() {
-                            t.changePage("login");
+                            t.sendInfo("POST", "/tuition/logout/", {}, function () {
+                                t.changePage("login");
+                                t.displaySnackMessage("Logout was successful");
+                            }, function () {
+                                t.displaySnackMessage("Logout was not successful");
+                            });
                         } })] })
             });
         } else if (page_name == "new_assignment") {
             this.setState({ "current_page": _react2.default.createElement(_new_assignment2.default, {
                     sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
+                    changePage: this.changePage,
+                    displaySnackMessage: this.displaySnackMessage }) });
         } else if (page_name == "assignment_list") {
+            // TODO
+            this.sendInfo("GET", "/tuition/get_assignments/", function (xhttp) {// TODO
+            }, function (xhttp) {// TODO
+            });
             this.setState({ "current_page": _react2.default.createElement(_assignment_list2.default, {
                     sendInfo: this.sendInfo,
                     changePage: this.changePage }) });
         } else if (page_name == "assignment") {
+            //TODO
             this.setState({ "current_page": _react2.default.createElement(_assignment2.default, {
                     sendInfo: this.sendInfo,
                     changePage: this.changePage }) });
@@ -69524,7 +69554,6 @@ var Footer = _react2.default.createClass({
         return {};
     },
     render: function render() {
-        console.log("loading footer");
         var style = {
             display: 'flex',
             flexDirection: 'row wrap',
@@ -69752,7 +69781,7 @@ var GenericList = _react2.default.createClass({
     render: function render() {
         console.log("length of menu_items : " + this.props.menu_items.length);
         console.log("default message : " + this.props.default_empty_message);
-        console.log("menu_items : " + this.props.menu_items);
+        console.log("menu_items : " + this.props.menu_items[0]);
         if (this.props.menu_items.length > 0) {
             return _react2.default.createElement(
                 _List2.default,
@@ -69836,7 +69865,7 @@ var LoginPage = _react2.default.createClass({
         document.getElementById("loginSignUpSubmitButton").style.display = 'none';
         document.getElementById("loginSignUpSubmitSpinner").style.display = 'block';
         var t = this;
-        this.props.sendInfo("POST", "/tuition/login/", { "username": username, "password": password, "is_tutor": is_tutor }, function () {
+        this.props.sendInfo("POST", "/tuition/login/", { "username": username, "password": password, "is_tutor": is_tutor }, function (xhttp) {
             if (t.state.persona == "tutor") {
                 var flag = "tutor_main";
             } else if (t.state.persona == "student") {
@@ -69844,7 +69873,21 @@ var LoginPage = _react2.default.createClass({
             }
             t.props.displaySnackMessage("Login / Signup was successful");
             t.props.changePage(flag);
-        }, function () {
+        }, function (xhttp) {
+            var msg = "";
+            if (xhttp.responseContent == "KEY_USER_ACCOUNT_DISABLED") {
+                msg = "Your account has been disabled";
+            } else if (xhttp.responseContent == "KEY_INVALID_LOGIN") {
+                msg = "We are unable to log you in";
+            } else if (xhttp.responseContent == "KEY_CREATE_USER_FAILED") {
+                msg = "We cannot sign you up";
+            } else if (xhttp.responseContent == "KEY_CREATE_TUTOR_FAILED") {
+                msg = "We cannot sign you up as a tutor";
+            } else if (xhttp.responseContent == "KEY_CREATE_STUDENT_FAILED") {
+                msg = "We cannot sign you up as a student";
+            } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
+                msg = "You sent a bad request";
+            }
             t.props.displaySnackMessage("Login / Signup was not successful ");
         });
     },
@@ -69957,6 +70000,10 @@ var _RaisedButton = require('material-ui/RaisedButton');
 
 var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
 
+var _CircularProgress = require('material-ui/CircularProgress');
+
+var _CircularProgress2 = _interopRequireDefault(_CircularProgress);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var $ = require('jquery');
@@ -69982,7 +70029,7 @@ var NewAssignmentPage = _react2.default.createClass({
         };
         var q = [];
         for (var i = 0; i < numberOfQuestions; i++) {
-            var id_name = "editableContent" + i;
+            var id_name = "newAssignmentEditableContent" + i;
             q.push(_react2.default.createElement(_Paper2.default, { style: style,
                 zDepth: 2,
                 children: _react2.default.createElement(
@@ -70011,11 +70058,48 @@ var NewAssignmentPage = _react2.default.createClass({
                         )
                     ),
                     _react2.default.createElement(_TextField2.default, {
+                        id: "grade" + id_name,
+                        type: 'number',
                         hintText: 'Maximum grade',
                         floatingLabelText: 'Maximum points for this question' })
                 ) }));
         }
         this.setState({ questions: q });
+    },
+    saveAssignment: function saveAssignment() {
+        document.getElementById("new_assignment_save_button_id").style.display = "none";
+        document.getElementById("new_assignment_progress_circle_id").style.display = "block";
+        var q = [];
+        for (var i = 0; i < this.state.questions.length; i++) {
+            var id_name = "newAssignmentEditableContent" + i;
+            var grade_id_name = "gradenewAssignmentEditableContent" + i;
+            q.push({
+                "content": document.getElementById(id_name).textContent,
+                "maximum_grade": document.getElementById(grade_id_name).value
+            });
+        }
+        var t = this;
+        this.props.sendInfo("POST", "/tuition/new_assignment/", {
+            "questions": q
+        }, function (xhttp) {
+            t.props.displaySnackMessage("Your assignment has been saved!");
+            document.getElementById("new_assignment_save_button_id").style.display = "block";
+            document.getElementById("new_assignment_progress_circle_id").style.display = "none";
+        }, function (xhttp) {
+            var msg = "";
+            if (xhttp.responseContent == "KEY_NOT_A_TUTOR") {
+                msg = "You are not a tutor. Please login again";
+                t.props.displaySnackMessage(msg);
+                t.props.changePage("login");
+            } else if (xhttp.responseContent == "KEY_EMPTY_ASSIGNMENT_DICTIONARY") {
+                msg = "You did not have any questions";
+            } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
+                msg = "You sent a bad request";
+            }
+            t.props.displaySnackMessage(msg);
+            document.getElementById("new_assignment_save_button_id").style.display = "block";
+            document.getElementById("new_assignment_progress_circle_id").style.display = "none";
+        });
     },
     render: function render() {
         var style = {
@@ -70038,6 +70122,7 @@ var NewAssignmentPage = _react2.default.createClass({
                     { style: style },
                     _react2.default.createElement(_TextField2.default, {
                         hintText: 'Enter Assignment Name',
+                        maxlength: '255',
                         floatingLabelText: 'Click to set assignment name',
                         floatingLabelFixed: true }),
                     _react2.default.createElement(_DatePicker2.default, {
@@ -70060,7 +70145,26 @@ var NewAssignmentPage = _react2.default.createClass({
                 _react2.default.createElement(
                     'div',
                     null,
-                    _react2.default.createElement(_RaisedButton2.default, { label: 'Save', style: buttonStyle })
+                    _react2.default.createElement(
+                        'div',
+                        {
+                            id: 'new_assignment_save_button_id' },
+                        _react2.default.createElement(_RaisedButton2.default, {
+                            label: 'Save',
+                            style: buttonStyle,
+                            onClick: this.saveAssignment })
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        {
+                            id: 'new_assignment_progress_circle_id' },
+                        _react2.default.createElement(_CircularProgress2.default, {
+                            ref: function ref(input) {
+                                if (input != null) {
+                                    document.getElementById("new_assignment_progress_circle_id").style.display = "none";
+                                }
+                            } })
+                    )
                 )
             ) });
     }
@@ -70068,7 +70172,7 @@ var NewAssignmentPage = _react2.default.createClass({
 
 exports.default = NewAssignmentPage;
 
-},{"alloyeditor":2,"jquery":61,"material-ui/DatePicker":198,"material-ui/Paper":226,"material-ui/RaisedButton":234,"material-ui/TextField":254,"react":456,"react-dom":308}],477:[function(require,module,exports){
+},{"alloyeditor":2,"jquery":61,"material-ui/CircularProgress":186,"material-ui/DatePicker":198,"material-ui/Paper":226,"material-ui/RaisedButton":234,"material-ui/TextField":254,"react":456,"react-dom":308}],477:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -70400,7 +70504,7 @@ exports.default = TutorList;
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _react = require('react');
@@ -70428,101 +70532,128 @@ var _list_components2 = _interopRequireDefault(_list_components);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var TutorMainPage = _react2.default.createClass({
-    displayName: 'TutorMainPage',
+  displayName: 'TutorMainPage',
 
-    getInitialState: function getInitialState() {
-        return {};
-    },
-    getStudentListFromJson: function getStudentListFromJson(jsonList) {
-        return jsonList.map(function (jsonOb) {
-            return _react2.default.createElement(_List2.default, {
-                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
-                primaryText: jsonOb.name,
-                secondaryText: _react2.default.createElement(
-                    'p',
-                    null,
-                    _react2.default.createElement(
-                        'span',
-                        null,
-                        'Total score'
-                    ),
-                    ' :',
-                    jsonOb.totalScore
-                ),
-                secondaryTextLines: 2
-            });
-        });
-    },
-    getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
-        return jsonList.map(function (jsonOb) {
-            return _react2.default.createElement(_List2.default, {
-                primaryText: jsonOb.name,
-                secondaryText: _react2.default.createElement(
-                    'p',
-                    null,
-                    _react2.default.createElement(
-                        'span',
-                        null,
-                        'Total completed'
-                    ),
-                    ' :',
-                    jsonOb.totalCompleted
-                ),
-                secondaryTextLines: 2
-            });
-        });
-    },
-    render: function render() {
+  getInitialState: function getInitialState() {
+    return {};
+  },
+  getStudentListFromJson: function getStudentListFromJson(jsonList) {
+    var styles = {
+      centerItem: {
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    };
+    return jsonList.map(function (jsonOb) {
+      console.log(jsonOb);
+      return _react2.default.createElement(_List2.default, {
+        style: styles.centerItem,
+        leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
+        primaryText: jsonOb.name,
+        secondaryText: _react2.default.createElement(
+          'p',
+          null,
+          _react2.default.createElement(
+            'span',
+            null,
+            'Total score'
+          ),
+          ' :',
+          jsonOb.totalScore
+        ),
+        secondaryTextLines: 2
+      });
+    });
+  },
+  getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
+    var styles = {
+      centerItem: {
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    };
+    return jsonList.map(function (jsonOb) {
+      console.log(jsonOb);
+      return _react2.default.createElement(_List2.default, {
+        style: styles.centerItem,
+        primaryText: jsonOb.name,
+        secondaryText: _react2.default.createElement(
+          'p',
+          null,
+          _react2.default.createElement(
+            'span',
+            null,
+            'Total completed'
+          ),
+          ' :',
+          jsonOb.totalCompleted
+        ),
+        secondaryTextLines: 2
+      });
+    });
+  },
+  render: function render() {
+    console.log("student list : " + this.props.studentList);
+    console.log("assignment list : " + this.props.assignmentList);
+    var styles = {
+      headline: {
+        fontSize: 24,
+        paddingTop: 16,
+        marginBottom: 12,
+        fontWeight: 400
+      },
+      centerItem: {
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      centerList: {
+        display: 'flex',
+        flexDirection: 'row wrap',
+        padding: 10,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    };
 
-        var styles = {
-            headline: {
-                fontSize: 24,
-                paddingTop: 16,
-                marginBottom: 12,
-                fontWeight: 400
-            },
-            centerItem: {
-                display: 'flex',
-                flexDirection: 'row wrap',
-                padding: 20,
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center'
-            },
-            centerList: {
-                display: 'flex',
-                flexDirection: 'row wrap',
-                padding: 10,
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center'
-            }
-        };
-
-        return _react2.default.createElement(
-            'div',
-            { style: styles.centerList },
-            _react2.default.createElement(
-                _Tabs.Tabs,
-                null,
-                _react2.default.createElement(
-                    _Tabs.Tab,
-                    { label: 'Assignments' },
-                    _react2.default.createElement(_list_components2.default, {
-                        default_empty_message: "You have not created any assignments yet.",
-                        menu_items: this.getAssignmentListFromJson([{ name: "Simultaneous Equation 1", dueDate: "", totalCompleted: "0" }])
-                    })
-                ),
-                _react2.default.createElement(
-                    _Tabs.Tab,
-                    { label: 'Students' },
-                    _react2.default.createElement(_list_components2.default, {
-                        default_empty_message: "You do have any students yet.",
-                        menu_items: this.getStudentListFromJson([{ source: "", name: "Brendan Lim", totalScore: "10" }]) })
-                )
-            )
-        );
-    }
+    return _react2.default.createElement(
+      'div',
+      null,
+      _react2.default.createElement(
+        _Tabs.Tabs,
+        null,
+        _react2.default.createElement(
+          _Tabs.Tab,
+          { label: 'Assignments' },
+          _react2.default.createElement(_list_components2.default, {
+            style: styles.centerList,
+            default_empty_message: "You have not created any assignments yet.",
+            menu_items: this.getAssignmentListFromJson([{ name: "Simultaneous Equation 1", dueDate: "", totalCompleted: "0" }])
+          })
+        ),
+        _react2.default.createElement(
+          _Tabs.Tab,
+          { label: 'Students' },
+          _react2.default.createElement(_list_components2.default, {
+            style: styles.centerList,
+            default_empty_message: "You do have any students yet.",
+            menu_items: this.getStudentListFromJson([{ source: "", name: "Brendan Lim", totalScore: "10" }]) })
+        )
+      )
+    );
+  }
 });
 
 exports.default = TutorMainPage;

@@ -40,7 +40,7 @@ var LoginPage = React.createClass({
             "/tuition/login/",
             {"username":username, "password":password, "is_tutor":is_tutor}
             ,
-            function(){
+            function(xhttp){
                 if (t.state.persona == "tutor") {
                     var flag = "tutor_main";
                 } else if (t.state.persona == "student") {
@@ -49,7 +49,21 @@ var LoginPage = React.createClass({
                 t.props.displaySnackMessage("Login / Signup was successful");
                 t.props.changePage(flag);
             },
-            function(){
+            function(xhttp){
+                var msg = "";
+                if (xhttp.responseContent == "KEY_USER_ACCOUNT_DISABLED") {
+                    msg = "Your account has been disabled";
+                } else if (xhttp.responseContent == "KEY_INVALID_LOGIN") {
+                    msg = "We are unable to log you in";
+                } else if (xhttp.responseContent == "KEY_CREATE_USER_FAILED") {
+                    msg = "We cannot sign you up";
+                } else if (xhttp.responseContent == "KEY_CREATE_TUTOR_FAILED") {
+                    msg = "We cannot sign you up as a tutor";
+                } else if (xhttp.responseContent == "KEY_CREATE_STUDENT_FAILED") {
+                    msg = "We cannot sign you up as a student";
+                } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
+                    msg = "You sent a bad request";
+                }
                 t.props.displaySnackMessage("Login / Signup was not successful ");
             }
         );

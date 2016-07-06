@@ -10,9 +10,21 @@ var TutorMainPage = React.createClass({
         return {};
     },
     getStudentListFromJson: function(jsonList){
+        const styles = {
+          centerItem: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 20,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          }
+        };
         return (jsonList.map(function(jsonOb){
+        console.log(jsonOb);
             return (
                 <ListItem
+                  style={styles.centerItem}
                   leftAvatar={<Avatar src={jsonOb.source}/>}
                   primaryText={jsonOb.name}
                   secondaryText={
@@ -27,9 +39,21 @@ var TutorMainPage = React.createClass({
         }));
     },
     getAssignmentListFromJson: function(jsonList){
+        const styles = {
+          centerItem: {
+            display: 'flex',
+            flexDirection: 'row wrap',
+            padding: 20,
+            flex:1,
+            alignItems:'center',
+            justifyContent:'center'
+          }
+        };
         return (jsonList.map(function(jsonOb){
+        console.log(jsonOb);
             return (
                 <ListItem
+                    style={styles.centerItem}
                     primaryText={jsonOb.name}
                     secondaryText={
                         <p>
@@ -43,7 +67,8 @@ var TutorMainPage = React.createClass({
         }));
     },
     render: function(){
-
+        console.log("student list : " + this.props.studentList);
+        console.log("assignment list : " + this.props.assignmentList);
         const styles = {
           headline: {
             fontSize: 24,
@@ -70,10 +95,11 @@ var TutorMainPage = React.createClass({
         };
 
         return (
-        <div style={styles.centerList}>
+        <div>
         <Tabs>
     <Tab label="Assignments" >
            <GenericList
+                style={styles.centerList}
                 default_empty_message={"You have not created any assignments yet."}
                 menu_items={
                 this.getAssignmentListFromJson(
@@ -86,6 +112,7 @@ var TutorMainPage = React.createClass({
     </Tab>
     <Tab label="Students" >
         <GenericList
+            style={styles.centerList}
             default_empty_message={"You do have any students yet."}
             menu_items={
             this.getStudentListFromJson(

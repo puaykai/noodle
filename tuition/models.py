@@ -26,12 +26,12 @@ class Assignment(models.Model):
     @classmethod
     def create_new_assignment(cls, assignment_dictionarys, tutor):
         """"json format is a list of dictionary. keys of each dictionary : content, max_grad"""""
-        assignment = cls()
+        assignment = cls(type='RE') # include in the next version, draft assignment
+        assignment.save()
         for assignment_dictionary in assignment_dictionarys:
             question = Question(content=assignment_dictionary.get("content", ""), maximum_grade=assignment_dictionary.get("maximum_grade", ""))
             question.save()
             assignment.questions.add(question)
-        assignment.save()
         tutor.assignments.add(assignment)
 
     @classmethod
@@ -39,11 +39,7 @@ class Assignment(models.Model):
         return serializers.serialize("json", cls.objects.filter(id=assignment_id))
 
     @classmethod
-    def get_ungraded_assignment(cls, user):
-        try:
-            tutor = Tutor.objects.get(user=user)
-        except:
-            return ""
+    def get_ungraded_assignment(cls, tutor):
         return serializers.serialize("json", cls.objects.filter(graded=False, tutor=tutor))
 
     @classmethod
@@ -85,7 +81,22 @@ class Assignment(models.Model):
 class Student(models.Model):
     user = models.OneToOneField(User, related_name="student")
     assignments = models.ManyToManyField(Assignment, related_name="student_assignments")
-    requested_tutors = models.ManyToManyField(Tutor, related_name="requesting_students")
+
+    @classmethod
+    def get_confirmed_tutors(cls, student):
+        return serializers.serialize('json', student.accepted_tutors)
+
+    @classmethod
+    def get_pending_tutors(cls, student):
+        return serializers.serialize('json', student.requested_tutors)
+
+    @classmethod
+    def get_due_assignments(cls, student):
+        return serializers.serialize('json', student.assignments.filter(type="RE"))
+
+    @classmethod
+    def get_completed_assignments(cls, student):
+        return serializers.serialize('json', student.assignments.filter(type="GR"))
 
 
 class Answer(models.Model):
@@ -99,5 +110,17 @@ class Answer(models.Model):
 class Tutor(models.Model):
     user = models.OneToOneField(User, related_name="tutor")
     accepted_students = models.ManyToManyField(Student, related_name="accepted_tutors")
+    requesting_students = models.ManyToManyField(Student, related_name="requested_tutors")
     assignments = models.ManyToManyField(Assignment, related_name="tutor_assignments") # many to many so that later tutor can share assignment
 
+    @classmethod
+    def get_requesting_students(cls, tutor):
+        return serializers.serialize("json", tutor.requesting_students.all())
+
+    @classmethod
+    def get_accepted_students(cls, tutor):
+        return serializers.serialize("json", tutor.accepted_students.all())
+
+    @classmethod
+    def get_assignment(cls, tutor):
+        return serializers.serialize("json", tutor.assignments.all())

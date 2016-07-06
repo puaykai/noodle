@@ -6,7 +6,6 @@ var Footer = React.createClass({
         return {};
     },
     render: function(){
-    console.log("loading footer");
         const style = {
             display: 'flex',
             flexDirection: 'row wrap',

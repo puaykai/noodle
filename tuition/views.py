@@ -7,8 +7,8 @@ from json import loads, dumps
 
 
 def signup_login(request):
-    print "method : %s and POST : %s" % (request.method, request.POST)
-    if request.method == "POST" and request.POST.get('username') and request.POST.get('password'):
+    if request.method == "POST" and request.body:
+        request.POST = loads(request.body)
         username = request.POST.get('username')
         password = request.POST.get('password')
         if User.objects.filter(username=username).exists():
@@ -54,8 +54,9 @@ def my_logout(request):
 
 @login_required
 def new_assignment(request):
-    if request.method == "POST" and request.POST.get("questions"):
-        questions = loads(request.POST.get("questions"))
+    if request.method == "POST" and request.body:
+        request.POST = loads(request.body)
+        questions = request.POST.get("questions")
         if len(questions) > 0:
             try:
                 tutor = Tutor.objects.get(user=request.user)
@@ -107,23 +108,61 @@ def get_graded_assignment(request):
 
 @login_required
 def get_assignments(request): # number of people completed for each assignment
-    pass
+    if request.method == "GET":
+        try:
+            tutor = Tutor.objects.get(user=request.user)
+        except:
+            return HttpResponse("KEY_TUTOR_DOES_NOT_EXIST", status=400)
+        return HttpResponse(Tutor.get_ungraded_assignment(tutor), status=200)
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
 @login_required
 def get_students(request): # students with a score for each assignment and total score
-    pass
+    if request.method == "GET":
+        try:
+            tutor = Tutor.objects.get(user=request.user)
+        except:
+            return HttpResponse("KEY_TUTOR_DOES_NOT_EXIST", status=400)
+        return HttpResponse(dumps({
+            "requesting_students": loads(Tutor.get_requesting_students(tutor)),
+            "accepted_students": loads(Tutor.get_accepted_students(tutor))
+        }), status=200)
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
 @login_required
 def get_due_assignments(request):
-    pass
+    if request.method == "GET":
+        try:
+            student = Student.objects.get(user=request.user)
+        except:
+            return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
+        return HttpResponse(Student.get_due_assignments(student), status=200)
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
 @login_required
 def get_completed_assignments(request):
-    pass
+    if request.method == "GET":
+        try:
+            student = Student.object.get(user=request.user)
+        except:
+            return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
+        return HttpResponse(Student.get_completed_assignments(student), status=200)
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
 @login_required
 def get_leaderboard(request):
-    pass
+    if request.method == "POST" and "assignment_id" in request.POST:
+        try:
+            student = Student.objects.get(user=request.user)
+        except:
+            return HttpResponse('KEY_NO_SUCH_STUDENT', status=400)
+        # TODO
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
 @login_required
 def get_tutors(request):
@@ -136,6 +175,8 @@ def get_tutors(request):
             "confirmed_tutors": Student.get_confirmed_tutors(student),
             "pending_tutors": Student.get_pending_tutors(student)
         }), status=200)
+    else:
+        return HttpResponse("KEY_BAD_RESPONSE", status=200)
 
 @login_required
 def add_tutor(request):
