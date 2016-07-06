@@ -39,7 +39,8 @@ var LoginPage = React.createClass({
             {"username":username, "password":password, "is_tutor":is_tutor}
             ,
             function(xhttp){
-                if (xhttp.responseContent == "KEY_IS_A_TUTOR") {
+            console.log(xhttp.responseText);
+                if (xhttp.responseText == "KEY_IS_A_TUTOR") {
                     t.setState({persona:"tutor"});
                 } else {
                     t.setState({persona:"student"});

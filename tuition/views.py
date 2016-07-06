@@ -127,6 +127,7 @@ def get_students(request): # students with a score for each assignment and total
             tutor = Tutor.objects.get(user=request.user)
         except:
             return HttpResponse("KEY_TUTOR_DOES_NOT_EXIST", status=400)
+        print "requesting students : " + Tutor.get_requesting_students(tutor)
         return HttpResponse(dumps({
             "requesting_students": loads(Tutor.get_requesting_students(tutor)),
             "accepted_students": loads(Tutor.get_accepted_students(tutor))

@@ -102,7 +102,7 @@ var App = React.createClass({
                 "GET",
                 "/tuition/get_ungraded_assignments/",
                 function(xhttp){
-                    assignmentList = JSON.parse(xhttp.responseContent);
+                    assignmentList = JSON.parse(xhttp.responseText);
                 },
                 function(xhttp){
                     t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
@@ -112,7 +112,7 @@ var App = React.createClass({
                 "GET",
                 "/tuition/get_students/",
                 function(xhttp){
-                    studentList = JSON.parse(xhttp.responseContent);
+                    studentList = JSON.parse(xhttp.responseText);
                 },
                 function(xhttp){
                     t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.")
@@ -144,7 +144,7 @@ var App = React.createClass({
                                     t.changePage("new_assignment");
                                 }}/>,
                             <MenuItem
-                                primaryText="Ungraded Assignment"
+                                primaryText="Ungraded Assignments"
                                 onClick={function(){
                                     t.changePage("ungraded_assignment");
                                 }}/>,
@@ -244,19 +244,6 @@ var App = React.createClass({
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}
                                             displaySnackMessage={this.displaySnackMessage}/>});
-        } else if (page_name == "assignment_list") {
-            // TODO
-            this.sendInfo(
-                "GET",
-                "/tuition/get_assignments/",
-                function(xhttp){// TODO
-                },
-                function(xhttp){// TODO
-                }
-            );
-            this.setState({"current_page":<AssignmentsList
-                                            sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
         } else if (page_name == "assignment") {
             //TODO
             this.setState({"current_page":<Assignment
@@ -280,7 +267,22 @@ var App = React.createClass({
                                 onClick={function(){}}/>
                         ]}/>});
         } else if (page_name == "ungraded_assignment") {
-            this.setState({"current_page":<Assignment
+            var assignmentList = [];
+            var t = this;
+            this.sendInfo(
+                "GET",
+                "/tuition/get_ungraded_assignment/",
+                {},
+                function(xhttp){
+
+                },
+                function(xhttp){
+                    if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                        t.displaySnackMessage("The request is bad");
+                    }
+                }
+            );
+            this.setState({"current_page":<AssignmentsList
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}/>});
         } else if (page_name == "leaderboard") {
@@ -295,7 +297,7 @@ var App = React.createClass({
                 "/tuition/get_tutors/",
                 {},
                 function(xhttp){
-                    tutorList = JSON.parse(xhttp.responseContent);
+                    tutorList = JSON.parse(xhttp.responseText);
                 },
                 function(xhttp){
                     t.displaySnackMessage("Did not manage to get snack message");

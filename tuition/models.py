@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
 from django.db import models, transaction
+from django.db.models import Avg, Sum, FloatField
 from django.contrib.auth.models import User
 from django.core import serializers
+from json import dumps
 
 
 class Question(models.Model):
@@ -20,7 +22,6 @@ class Assignment(models.Model):
     )
     name = models.TextField(default="")
     questions = models.ManyToManyField(Question, related_name="questions") # so that we can use questions from previous assignments
-    graded = models.BooleanField(default=False)
     type = models.CharField(max_length=2, choices=CONDITION_OF_ASSSIGNMENT, default='DR')
 
     @classmethod
@@ -40,7 +41,7 @@ class Assignment(models.Model):
 
     @classmethod
     def get_ungraded_assignment(cls, tutor):
-        return serializers.serialize("json", cls.objects.filter(graded=False, tutor=tutor))
+        return serializers.serialize("json", cls.objects.filter(type='DO', tutor=tutor))
 
     @classmethod
     def get_graded_assignment(cls, user):
@@ -115,6 +116,12 @@ class Tutor(models.Model):
 
     @classmethod
     def get_requesting_students(cls, tutor):
+        print "*****"
+        print dumps(list(tutor.requesting_students.annotate(
+            average_assignment_percentage=Avg(Sum('assignments__questions__answer__grade')/
+                                              Sum('assignments__questions__maximum_grade'), output_field=FloatField()))
+                         .values_list('user__username', "user__avatar", "average_assignment_percentage")))
+        print "******"
         return serializers.serialize("json", tutor.requesting_students.all())
 
     @classmethod

@@ -2,8 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Avatar from 'material-ui/Avatar';
 import {Tabs, Tab} from 'material-ui/Tabs';
-import ListItem from 'material-ui/List';
-import List from 'material-ui/List';
+import {ListItem, List} from 'material-ui/List';
 import GenericList from './list_components';
 
 var TutorMainPage = React.createClass({
@@ -15,7 +14,7 @@ var TutorMainPage = React.createClass({
           centerItem: {
             display: 'flex',
             flexDirection: 'row wrap',
-            padding: 20,
+            padding: 5,
             flex:1,
             alignItems:'center',
             justifyContent:'center'
@@ -44,7 +43,7 @@ var TutorMainPage = React.createClass({
           centerItem: {
             display: 'flex',
             flexDirection: 'row wrap',
-            padding: 20,
+            padding: 5,
             flex:1,
             alignItems:'center',
             justifyContent:'center'
@@ -78,18 +77,10 @@ var TutorMainPage = React.createClass({
             fontWeight: 400,
           },
           centerItem: {
-            display: 'flex',
-            flexDirection: 'row wrap',
-            padding: 20,
-            flex:1,
-            alignItems:'center',
-            justifyContent:'center'
+            width:"60%"
           },
           centerList: {
-            display: 'flex',
-            flexDirection: 'row wrap',
-            padding: 10,
-            flex:1,
+            width:"60%",
             alignItems:'center',
             justifyContent:'center'
           }
@@ -100,7 +91,6 @@ var TutorMainPage = React.createClass({
         <Tabs>
     <Tab label="Assignments" >
            <GenericList
-                style={styles.centerList}
                 default_empty_message={"You have not created any assignments yet."}
                 menu_items={
                 this.getAssignmentListFromJson(
@@ -113,7 +103,6 @@ var TutorMainPage = React.createClass({
     </Tab>
     <Tab label="Students" >
         <GenericList
-            style={styles.centerList}
             default_empty_message={"You do have any students yet."}
             menu_items={
             this.getStudentListFromJson(

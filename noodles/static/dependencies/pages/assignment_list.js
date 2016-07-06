@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 import ListItem from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import GenericList from './list_components';
+import Assignment from './assignment';
+import Avatar from 'material-ui/Avatar';
+import RaisedButton from 'material-ui/RaisedButton';
 
 
 var AssignmentsList = React.createClass({
@@ -11,6 +14,7 @@ var AssignmentsList = React.createClass({
     },
     getAssignmentListFromJson:function(jsonList){
         return (jsonList.map(function(jsonOb){
+            var t = this;
             return (
                 <ListItem
                     leftAvatar={<Avatar src={jsonOb.source}/>}
@@ -19,6 +23,14 @@ var AssignmentsList = React.createClass({
                         <p>
                             <span>{jsonOb.assignmentName}</span>
                         </p>
+                        <div>
+                            <RaisedButton
+                                label="Grade"
+                                onClick=function(){
+                                    t.sendInfo(); //TODO fetch assignment information
+                                    t.changePage("assignment");
+                                }/>
+                        </div>
                     }
                     secondaryTextLines={2}/>
             );

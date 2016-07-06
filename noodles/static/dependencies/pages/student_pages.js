@@ -47,18 +47,12 @@ var StudentMainPage = React.createClass({
             fontWeight: 400,
           },
           centerItem: {
-            display: 'flex',
-            flexDirection: 'row wrap',
-            padding: 20,
-            flex:1,
-            alignItems:'center',
-            justifyContent:'center'
+            width:"60%"
           },
           centerList: {
             display: 'flex',
             flexDirection: 'row wrap',
-            padding: 10,
-            flex:1,
+            padding: 0,
             alignItems:'center',
             justifyContent:'center'
           }
@@ -66,7 +60,7 @@ var StudentMainPage = React.createClass({
         };
 
         return (
-        <div style={styles.centerList}>
+        <div>
   <Tabs>
     <Tab label="Due Assignments" >
         <GenericList

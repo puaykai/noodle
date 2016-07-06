@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import GenericList from './list_components';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import ListItem from 'material-ui/List';
+import Avatar from 'material-ui/Avatar';
 
 var LeaderBoard = React.createClass({
     getInitialState: function(){
