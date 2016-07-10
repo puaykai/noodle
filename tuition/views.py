@@ -74,9 +74,7 @@ def new_assignment(request):
 
 @login_required
 def get_assignment(request):
-    print "getting assignment : %s" % request.GET
-    print "getting assignment request body : %s" % request.body
-    if request.method == "POST" and request.body:
+    if request.method == "POST" and request.body: # TODO check if either a
         request.POST = loads(request.body)
         return HttpResponse(Assignment.get_assignment(request.POST.get("assignment_id")), status=200)
     else:
@@ -86,7 +84,10 @@ def get_assignment(request):
 def do_assignment(request):
     if request.method == "POST" and "answers" in request.POST and "assignment_id" in request.POST:
         answers = loads(request.POST.get("answers"))
-        return HttpResponse(Assignment.do_assignment(answers, request.user, request.POST.get("assignment_id")), status=200)
+        if Assignment.do_assignment(answers, request.user, request.POST.get("assignment_id")):
+            return HttpResponse("SAVE_ASSIGNMENT_SUCCESS", status=200)
+        else:
+            return HttpResponse("SAVE_ASSIGNMENT_FAILED", status=400)
     else:
         return HttpResponse("KEY_BAD_REQUEST", status=400)
 

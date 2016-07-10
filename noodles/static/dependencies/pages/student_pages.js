@@ -100,17 +100,18 @@ var StudentMainPage = React.createClass({
         return (jsonList.map(function(jsonOb){
             var doAssignment = function(){
                 console.log("DUE ASSIGNMENT ID : " + jsonOb.id);
-                t.props.sendInfo(
-                    "POST",
-                    "/tuition/get_assignment/",
-                    {"assignment_id":jsonOb.id},
-                    function(xhttp){
-                        console.log("response good: " + xhttp.responseText);
-                    },
-                    function(xhttp){
-                        console.log("response bad : " + xhttp.responseText);
-                    }
-                );
+//                t.props.sendInfo(
+//                    "POST",
+//                    "/tuition/get_assignment/",
+//                    {"assignment_id":jsonOb.id},
+//                    function(xhttp){
+//                        console.log("response good: " + xhttp.responseText);
+//                    },
+//                    function(xhttp){
+//                        console.log("response bad : " + xhttp.responseText);
+//                    }
+//                );
+                t.props.changePage("assignment", jsonOb.id);
             };
             return (
                 <ListItem

@@ -4,6 +4,8 @@ import TextField from 'material-ui/TextField';
 import Paper from 'material-ui/Paper';
 import Divider from 'material-ui/Divider';
 import RaisedButton from 'material-ui/RaisedButton';
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
 
 var $ = require('jquery');
 
@@ -12,21 +14,72 @@ var AlloyEditor = require('alloyeditor');
 var Assignment = React.createClass({
     getInitialState: function(){
         return {
-            questions:this.props.questions,
+            questions:[],
             currentPageNum:0,
-            currentPage:null
+            currentPage:null,
+            openDialog:false
         };
     },
-    componentWillMount: function(){
-        if (this.props.questions.length > 0) {
-            this.setState({
-                currentPage:this.getObjectFromJson(
-                    this.state.questions[0]
-                )
-                });
-        }
+    handleOpenDialog:function(){
+        this.setState({openDialog:true});
     },
-    getObjectFromJson: function(json){
+    handleCloseDialogPositive:function(){
+        this.setState({openDialog:false});
+
+    },
+    handleCloseDialogNegative:function(){
+        this.setState({openDialog:false});
+    },
+    componentWillMount: function(){
+            console.log("ASSIGNMENT : " + this.props.pageParams);
+            var t = this;
+            this.props.sendInfo(
+                "POST",
+                "/tuition/get_assignment/",
+                {"assignment_id":this.props.pageParams},
+                function(xhttp){
+                    console.log("ASSIGNMENT response good: " + xhttp.responseText);
+                    var q = [];
+                    var r = JSON.parse(xhttp.responseText);
+                    var assignment_name = r.name;
+                    r = r.questions;
+                    for (var i=0; i<r.length; i++) {
+                        var a = {};
+                        console.log(a);
+                        a['question'] = r[i]['questions__content'];
+                        a['maxScore'] = r[i]['questions__maximum_grade'];
+                        console.log("question : " + q['question'] + " maxScore : " + q['maxScore']);
+                        if (r[i]['questions__answer__graded'] == null && r[i]['questions__answer__content'] == null) {
+                            a['isGraded'] = false;
+                            a['isAnswered'] = false;
+                        } else if (r[i]['questions__answer__graded'] == null) {
+                            a['isAnswered'] = true;
+                            a['isGraded'] = false;
+                            a['answer'] = r[i]['questions__answer__content'];
+                        } else {
+                            a['isAnswered'] = true;
+                            a['isGraded'] = true;
+                            a['answer'] = r[i]['questions__answer__content'];
+                            a['score'] = r[i]['questions__answer__grade'];
+                            a['comment'] = r[i]['questions__answer__comment'];
+                        }
+                        q.push(a);
+                    }
+                    t.setState({
+                        questions:q,
+                        currentPage:t.getObjectFromJson(q[0], 0)
+                    });
+                },
+                function(xhttp){
+                    console.log("ASSIGNMENT response bad : " + xhttp.responseText);
+                    t.props.displaySnackMessage("You sent a bad request");
+                }
+            );
+    },
+    getObjectFromJson: function(json, pageNum){
+
+        console.log("isGraded : " + json.isGraded + " is Answered : " + json.isAnswered);
+
         const style = {
             display: 'flex',
             padding: 3,
@@ -37,7 +90,9 @@ var Assignment = React.createClass({
         const buttonStyle = {
             margin: 12,
         };
+        var t = this;
         if(json.isAnswered && json.isGraded){ //for review only
+            console.log("For review only");
             var firstPart = (<div>
                 <h4>Answer:</h4>
                 <div>>{json.answer}</div></div>);
@@ -53,12 +108,13 @@ var Assignment = React.createClass({
                 </div>
             );
         } else if(json.isAnswered) { //isAnswered but not graded
+            console.log("is answered but not graded");
             var firstPart=(
 
             <div><h4>Answer:</h4>
             <div>{json.answer}</div></div>);
             var hintText = "Enter a grade out of " + json.maxScore;
-            var content_id = "editableContent-"+this.state.currentPageNum;
+            var content_id = "editableContent-"+pageNum;
             var secondPart=(
                 <div>
                 <h4>Comment:</h4>
@@ -86,31 +142,45 @@ var Assignment = React.createClass({
                 </div>
             );
         } else { // is not answered, since once graded is considered answered
-
-            var content_id = "editableContent-"+this.state.currentPageNum;
+            console.log("is not answered ");
+            var content_id = "editableContent-"+pageNum;
+            console.log("content_id : " + content_id);
             var firstPart=(
             <div>
                 <h4>Answer:</h4>
                 <div id={content_id} ref={
                 function(input){
                     if(input != null) { // This happens when objects gets dereferenced
-                        AlloyEditor.editable(input.id, {
-                            container: 'editable'
-                        });
+                        console.log("calling ref current question : " + t.state.currentPageNum);
+                        document.getElementById(input.id).innerHTML = t.state.questions[t.state.currentPageNum].answer;
+                        console.log("setting" + input.id + " to " + t.state.questions[t.state.currentPageNum].answer);
+                        try{
+                            AlloyEditor.editable(input.id, {
+                                container: 'editable'
+                            });
+                        } catch(err) {
+                            console.log(err);
+                        }
                     }
                 }
-            }>
+            }><p>Click here to edit your answer</p>
             </div>
             </div>);
             var secondPart=(<div></div>);
         }
+
+        console.log("assignment render question : " + json.question);
+
         return (
         <Paper
             style={style}
             zDepth={1}
             children={
             <div>
-            <div>{json.question}</div>
+            <div>
+            <h4>Question: </h4>
+            {json.question}
+            </div>
             <Divider/>
             {firstPart}
             <Divider/>
@@ -127,15 +197,67 @@ var Assignment = React.createClass({
     },
     goToNextPage: function(){
         console.log("triggered go to next page");
+        //Save the answer and set new answer
+        this.state.questions[this.state.currentPageNum].answer = document.getElementById("editableContent-"+this.state.currentPageNum).innerHTML;
         var nextPageNumber = (this.state.currentPageNum + 1) % this.state.questions.length;
-        var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber]);
+        var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber], nextPageNumber);
         this.setState({
             currentPageNum:nextPageNumber,
             currentPage:nextQuestion
         });
+        console.log("trigger to go next page : " + this.state.currentPageNum);
+    },
+    componentWillUnmount: function(){
+        // TODO dialog for
+        this.setState({
+            openDialog:true
+        });
+        for (var i=0; i<this.state.questions.length; i++) {
+            var question = this.state.questions[i];
+            if(question.isAnswered && question.isGraded) { //reviewing
+                //TODO this version we are not implementing reviewing
+            } else if(question.isAnswered) { // grading
+//                this.props.sendInfo(
+//                    "POST",
+//                    "",
+//                    {},
+//                    function(xhttp){},
+//                    function(xhttp){}
+//                );
+            } else { //answering
+            }
+        }
     },
     render: function(){
-        return (<div>{this.state.currentPage}</div>);
+    const actions = [
+      <FlatButton
+        label="Cancel"
+        primary={true}
+        onTouchTap={this.handleCloseDialogNegative}
+      />,
+      <FlatButton
+        label="Submit"
+        primary={true}
+        keyboardFocused={true}
+        onTouchTap={this.handleCloseDialogPositive}
+      />,
+    ];
+        console.log("current page number on render : " + this.state.currentPageNum);
+        return (<div>
+              <div>
+                <Dialog
+                  title="Confirm Navigate Away?"
+                  actions={actions}
+                  modal={true}
+                  open={this.state.openDialog}
+                  onRequestClose={this.handleCloseDialogNegative}
+                >
+                  Navigating away will submit this assignment as your final answer. Are you sure?
+                </Dialog>
+              </div>
+        {this.state.currentPage}
+
+        </div>);
     }
 });
 

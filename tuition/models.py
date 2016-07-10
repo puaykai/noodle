@@ -39,14 +39,18 @@ class Assignment(models.Model):
 
     @classmethod
     def get_assignment(cls, assignment_id):
-        return dumps(list(cls.objects.filter(id=assignment_id)
-                          .values('name',
-                                       'questions__content',
-                                       'questions__maximum_grade',
-                                       'questions__answer__content',
-                                       'questions__answer__grade',
-                                       'questions__answer__comment',
-                                       'questions__answer__graded')))
+        assignment = cls.objects.filter(id=assignment_id)
+        return dumps({
+            "name":assignment.first().name,
+            "questions":list(assignment.values(
+                'questions__content',
+                'questions__maximum_grade',
+                'questions__answer__content',
+                'questions__answer__grade',
+                'questions__answer__comment',
+                'questions__answer__graded'
+            ))
+        })
 
     @classmethod
     def get_ungraded_assignment(cls, tutor):
@@ -67,12 +71,14 @@ class Assignment(models.Model):
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
             except:
-                return ""
+                return False
             for answer_dictionary in answers_dictionary:# {question_id, answer}
                 question = assignment.questions.get(id=answer_dictionary.get("question_id"))
                 Answer(question=question, content=answer_dictionary.get("answer")).save()
             assignment.type = "DO"
             assignment.save()
+            return True
+        return False
 
     @classmethod
     def grade(cls, questions_dictionary, user, assignment_id):

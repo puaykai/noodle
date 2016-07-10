@@ -148,7 +148,8 @@ var App = _react2.default.createClass({
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
         this.state.xhttp.send(JSON.stringify(message));
     },
-    changePage: function changePage(page_name) {
+    changePage: function changePage(page_name, page_params) {
+        console.log("page params : " + page_params);
         if (page_name == "tutor_main") {
             var t = this;
             this.setState({
@@ -233,10 +234,11 @@ var App = _react2.default.createClass({
                     changePage: this.changePage,
                     displaySnackMessage: this.displaySnackMessage }) });
         } else if (page_name == "assignment") {
-            //TODO
             this.setState({ "current_page": _react2.default.createElement(_assignment2.default, {
                     sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
+                    changePage: this.changePage,
+                    displaySnackMessage: this.displaySnackMessage,
+                    pageParams: page_params }) });
         } else if (page_name == "login") {
             this.setState({
                 "current_page": _react2.default.createElement(_login_sign_up2.default, {
@@ -69218,6 +69220,14 @@ var _RaisedButton = require('material-ui/RaisedButton');
 
 var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
 
+var _Dialog = require('material-ui/Dialog');
+
+var _Dialog2 = _interopRequireDefault(_Dialog);
+
+var _FlatButton = require('material-ui/FlatButton');
+
+var _FlatButton2 = _interopRequireDefault(_FlatButton);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var $ = require('jquery');
@@ -69229,19 +69239,65 @@ var Assignment = _react2.default.createClass({
 
     getInitialState: function getInitialState() {
         return {
-            questions: this.props.questions,
+            questions: [],
             currentPageNum: 0,
-            currentPage: null
+            currentPage: null,
+            openDialog: false
         };
     },
-    componentWillMount: function componentWillMount() {
-        if (this.props.questions.length > 0) {
-            this.setState({
-                currentPage: this.getObjectFromJson(this.state.questions[0])
-            });
-        }
+    handleOpenDialog: function handleOpenDialog() {
+        this.setState({ openDialog: true });
     },
-    getObjectFromJson: function getObjectFromJson(json) {
+    handleCloseDialogPositive: function handleCloseDialogPositive() {
+        this.setState({ openDialog: false });
+    },
+    handleCloseDialogNegative: function handleCloseDialogNegative() {
+        this.setState({ openDialog: false });
+    },
+    componentWillMount: function componentWillMount() {
+        console.log("ASSIGNMENT : " + this.props.pageParams);
+        var t = this;
+        this.props.sendInfo("POST", "/tuition/get_assignment/", { "assignment_id": this.props.pageParams }, function (xhttp) {
+            console.log("ASSIGNMENT response good: " + xhttp.responseText);
+            var q = [];
+            var r = JSON.parse(xhttp.responseText);
+            var assignment_name = r.name;
+            r = r.questions;
+            for (var i = 0; i < r.length; i++) {
+                var a = {};
+                console.log(a);
+                a['question'] = r[i]['questions__content'];
+                a['maxScore'] = r[i]['questions__maximum_grade'];
+                console.log("question : " + q['question'] + " maxScore : " + q['maxScore']);
+                if (r[i]['questions__answer__graded'] == null && r[i]['questions__answer__content'] == null) {
+                    a['isGraded'] = false;
+                    a['isAnswered'] = false;
+                } else if (r[i]['questions__answer__graded'] == null) {
+                    a['isAnswered'] = true;
+                    a['isGraded'] = false;
+                    a['answer'] = r[i]['questions__answer__content'];
+                } else {
+                    a['isAnswered'] = true;
+                    a['isGraded'] = true;
+                    a['answer'] = r[i]['questions__answer__content'];
+                    a['score'] = r[i]['questions__answer__grade'];
+                    a['comment'] = r[i]['questions__answer__comment'];
+                }
+                q.push(a);
+            }
+            t.setState({
+                questions: q,
+                currentPage: t.getObjectFromJson(q[0], 0)
+            });
+        }, function (xhttp) {
+            console.log("ASSIGNMENT response bad : " + xhttp.responseText);
+            t.props.displaySnackMessage("You sent a bad request");
+        });
+    },
+    getObjectFromJson: function getObjectFromJson(json, pageNum) {
+
+        console.log("isGraded : " + json.isGraded + " is Answered : " + json.isAnswered);
+
         var style = {
             display: 'flex',
             padding: 3,
@@ -69252,8 +69308,10 @@ var Assignment = _react2.default.createClass({
         var buttonStyle = {
             margin: 12
         };
+        var t = this;
         if (json.isAnswered && json.isGraded) {
             //for review only
+            console.log("For review only");
             var firstPart = _react2.default.createElement(
                 'div',
                 null,
@@ -69300,6 +69358,7 @@ var Assignment = _react2.default.createClass({
             );
         } else if (json.isAnswered) {
             //isAnswered but not graded
+            console.log("is answered but not graded");
             var firstPart = _react2.default.createElement(
                 'div',
                 null,
@@ -69315,7 +69374,7 @@ var Assignment = _react2.default.createClass({
                 )
             );
             var hintText = "Enter a grade out of " + json.maxScore;
-            var content_id = "editableContent-" + this.state.currentPageNum;
+            var content_id = "editableContent-" + pageNum;
             var secondPart = _react2.default.createElement(
                 'div',
                 null,
@@ -69355,8 +69414,9 @@ var Assignment = _react2.default.createClass({
             );
         } else {
             // is not answered, since once graded is considered answered
-
-            var content_id = "editableContent-" + this.state.currentPageNum;
+            console.log("is not answered ");
+            var content_id = "editableContent-" + pageNum;
+            console.log("content_id : " + content_id);
             var firstPart = _react2.default.createElement(
                 'div',
                 null,
@@ -69365,17 +69425,35 @@ var Assignment = _react2.default.createClass({
                     null,
                     'Answer:'
                 ),
-                _react2.default.createElement('div', { id: content_id, ref: function ref(input) {
-                        if (input != null) {
-                            // This happens when objects gets dereferenced
-                            AlloyEditor.editable(input.id, {
-                                container: 'editable'
-                            });
-                        }
-                    } })
+                _react2.default.createElement(
+                    'div',
+                    { id: content_id, ref: function ref(input) {
+                            if (input != null) {
+                                // This happens when objects gets dereferenced
+                                console.log("calling ref current question : " + t.state.currentPageNum);
+                                document.getElementById(input.id).innerHTML = t.state.questions[t.state.currentPageNum].answer;
+                                console.log("setting" + input.id + " to " + t.state.questions[t.state.currentPageNum].answer);
+                                try {
+                                    AlloyEditor.editable(input.id, {
+                                        container: 'editable'
+                                    });
+                                } catch (err) {
+                                    console.log(err);
+                                }
+                            }
+                        } },
+                    _react2.default.createElement(
+                        'p',
+                        null,
+                        'Click here to edit your answer'
+                    )
+                )
             );
             var secondPart = _react2.default.createElement('div', null);
         }
+
+        console.log("assignment render question : " + json.question);
+
         return _react2.default.createElement(_Paper2.default, {
             style: style,
             zDepth: 1,
@@ -69385,6 +69463,11 @@ var Assignment = _react2.default.createClass({
                 _react2.default.createElement(
                     'div',
                     null,
+                    _react2.default.createElement(
+                        'h4',
+                        null,
+                        'Question: '
+                    ),
                     json.question
                 ),
                 _react2.default.createElement(_Divider2.default, null),
@@ -69400,17 +69483,77 @@ var Assignment = _react2.default.createClass({
     },
     goToNextPage: function goToNextPage() {
         console.log("triggered go to next page");
+        //Save the answer and set new answer
+        this.state.questions[this.state.currentPageNum].answer = document.getElementById("editableContent-" + this.state.currentPageNum).innerHTML;
         var nextPageNumber = (this.state.currentPageNum + 1) % this.state.questions.length;
-        var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber]);
+        var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber], nextPageNumber);
         this.setState({
             currentPageNum: nextPageNumber,
             currentPage: nextQuestion
         });
+        console.log("trigger to go next page : " + this.state.currentPageNum);
+    },
+    componentWillUnmount: function componentWillUnmount() {
+        // TODO dialog for
+        this.setState({
+            openDialog: true
+        });
+        for (var i = 0; i < this.state.questions.length; i++) {
+            var question = this.state.questions[i];
+            if (question.isAnswered && question.isGraded) {//reviewing
+                //TODO this version we are not implementing reviewing
+            } else if (question.isAnswered) {// grading
+                    //                this.props.sendInfo(
+                    //                    "POST",
+                    //                    "",
+                    //                    {},
+                    //                    function(xhttp){},
+                    //                    function(xhttp){}
+                    //                );
+                } else {//answering
+                    }
+        }
+        window.onbeforeunload = function () {
+            console.log("running beforeunload");
+            var prevent = false;
+            events.emit("will-leave", {
+                preventDefault: function preventDefault(reason) {
+                    prevent = reason;
+                }
+            });
+            if (prevent) return prevent;
+        };
     },
     render: function render() {
+        var actions = [_react2.default.createElement(_FlatButton2.default, {
+            label: 'Cancel',
+            primary: true,
+            onTouchTap: this.handleCloseDialogNegative
+        }), _react2.default.createElement(_FlatButton2.default, {
+            label: 'Submit',
+            primary: true,
+            keyboardFocused: true,
+            onTouchTap: this.handleCloseDialogPositive
+        })];
+        console.log("current page number on render : " + this.state.currentPageNum);
         return _react2.default.createElement(
             'div',
             null,
+            _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    _Dialog2.default,
+                    {
+                        title: 'Dialog With Actions',
+                        actions: actions,
+                        modal: true,
+                        open: this.state.openDialog,
+                        onRequestClose: this.handleCloseDialogNegative
+                    },
+                    'Navigating away will submit this assignment as your final answer. Are you sure?'
+                )
+            ),
             this.state.currentPage
         );
     }
@@ -69418,7 +69561,7 @@ var Assignment = _react2.default.createClass({
 
 exports.default = Assignment;
 
-},{"alloyeditor":2,"jquery":61,"material-ui/Divider":202,"material-ui/Paper":226,"material-ui/RaisedButton":234,"material-ui/TextField":254,"react":456,"react-dom":308}],470:[function(require,module,exports){
+},{"alloyeditor":2,"jquery":61,"material-ui/Dialog":200,"material-ui/Divider":202,"material-ui/FlatButton":207,"material-ui/Paper":226,"material-ui/RaisedButton":234,"material-ui/TextField":254,"react":456,"react-dom":308}],470:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -70499,11 +70642,18 @@ var StudentMainPage = _react2.default.createClass({
         return jsonList.map(function (jsonOb) {
             var doAssignment = function doAssignment() {
                 console.log("DUE ASSIGNMENT ID : " + jsonOb.id);
-                t.props.sendInfo("POST", "/tuition/get_assignment/", { "assignment_id": jsonOb.id }, function (xhttp) {
-                    console.log("response good: " + xhttp.responseText);
-                }, function (xhttp) {
-                    console.log("response bad : " + xhttp.responseText);
-                });
+                //                t.props.sendInfo(
+                //                    "POST",
+                //                    "/tuition/get_assignment/",
+                //                    {"assignment_id":jsonOb.id},
+                //                    function(xhttp){
+                //                        console.log("response good: " + xhttp.responseText);
+                //                    },
+                //                    function(xhttp){
+                //                        console.log("response bad : " + xhttp.responseText);
+                //                    }
+                //                );
+                t.props.changePage("assignment", jsonOb.id);
             };
             return _react2.default.createElement(_List.ListItem, {
                 onClick: doAssignment,
