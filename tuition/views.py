@@ -65,7 +65,7 @@ def new_assignment(request):
                 tutor = Tutor.objects.get(user=request.user)
             except:
                 return HttpResponse("KEY_NOT_A_TUTOR", status=400)
-            Assignment.create_new_assignment(questions, tutor)
+            Assignment.create_new_assignment(questions, tutor, request.POST.get("name", ""), request.POST.get("due_date", ""))
             return HttpResponse("KEY_CREATION_SUCCESSFUL", status=200)
         else:
             return HttpResponse("KEY_EMPTY_ASSIGNMENT_DICTIONARY", status=400)
@@ -90,7 +90,11 @@ def do_assignment(request):
 @login_required
 def get_ungraded_assignments(request):
     if request.method == "GET":
-        return HttpResponse(Assignment.get_ungraded_assignment(request.user), status=200)
+        try:
+            tutor = Tutor.objects.get(user=request.user)
+        except:
+            return HttpResponse("KEY_NOT_A_TUTOR", status=400)
+        return HttpResponse(Assignment.get_ungraded_assignment(tutor), status=200)
     else:
         return HttpResponse("KEY_BAD_REQUEST", status=400)
 
@@ -127,11 +131,7 @@ def get_students(request): # students with a score for each assignment and total
             tutor = Tutor.objects.get(user=request.user)
         except:
             return HttpResponse("KEY_TUTOR_DOES_NOT_EXIST", status=400)
-        print "requesting students : " + Tutor.get_requesting_students(tutor)
-        return HttpResponse(dumps({
-            "requesting_students": loads(Tutor.get_requesting_students(tutor)),
-            "accepted_students": loads(Tutor.get_accepted_students(tutor))
-        }), status=200)
+        return HttpResponse(Tutor.get_accepted_students(tutor), status=200)
     else:
         return HttpResponse("KEY_BAD_RESPONSE", status=400)
 
@@ -142,6 +142,7 @@ def get_due_assignments(request):
             student = Student.objects.get(user=request.user)
         except:
             return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
+        print "due assignments : %s" % Student.get_due_assignments(student)
         return HttpResponse(Student.get_due_assignments(student), status=200)
     else:
         return HttpResponse("KEY_BAD_RESPONSE", status=400)
@@ -153,6 +154,7 @@ def get_completed_assignments(request):
             student = Student.object.get(user=request.user)
         except:
             return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
+        print "completed assignments : %s " % Student.get_completed_assignments(student)
         return HttpResponse(Student.get_completed_assignments(student), status=200)
     else:
         return HttpResponse("KEY_BAD_RESPONSE", status=400)
@@ -201,15 +203,19 @@ def add_tutor(request):
 
 @login_required
 def get_requesting_students(request):
-    try:
-        tutor = Tutor.objects.get(user=request.user)
-    except:
-        return HttpResponse('KEY_NOT_A_TUTOR', status=400)
-    return Tutor.get_requesting_students(tutor)
+    if request.method == "GET":
+        try:
+            tutor = Tutor.objects.get(user=request.user)
+        except:
+            return HttpResponse('KEY_NOT_A_TUTOR', status=400)
+        return HttpResponse(Tutor.get_requesting_students(tutor), status=200)
+    else:
+        return HttpResponse('KEY_BAD_REQUEST', status=400)
 
 @login_required
 def accept_student(request):
-    if request.method == "POST" and request.POST.get('student_id'):
+    if request.method == "POST" and request.body:
+        request.POST = loads(request.body)
         try:
             student = Student.objects.get(id=request.POST.get('student_id'))
         except:
@@ -218,14 +224,14 @@ def accept_student(request):
             tutor = Tutor.objects.get(user=request.user)
         except:
             return HttpResponse('KEY_NO_SUCH_TUTOR', status=400)
-        try:
-            student.requested_tutors.get(tutor)
-        except:
-            return HttpResponse('KEY_STUDENT_DID_NOT_REQUEST_FOR_TUTOR', sttus=400)
-        student.requested_tutors.remove(tutor)
-        tutor.accepted_students.add(student)
-        student.save()
-        tutor.save()
-        return HttpResponse('KEY_ACCEPT_STUDENT_SUCCESS', status=200)
+        if student.requested_tutors.filter(id=tutor.id).exists():
+            student.requested_tutors.remove(tutor)
+            tutor.accepted_students.add(student)
+            # student.assignments.add(*tutor.assignments.all())
+            student.save()  # TODO is this necessary?
+            return HttpResponse('KEY_ACCEPT_STUDENT_SUCCESS', status=200)
+        else:
+            return HttpResponse('KEY_STUDENT_DID_NOT_REQUEST_FOR_TUTOR', status=400)
     else:
         return HttpResponse('KEY_BAD_REQUEST', status=400)
+

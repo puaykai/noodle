@@ -58,7 +58,7 @@ var LoginPage = React.createClass({
                 if (xhttp.responseContent == "KEY_USER_ACCOUNT_DISABLED") {
                     msg = "Your account has been disabled";
                 } else if (xhttp.responseContent == "KEY_INVALID_LOGIN") {
-                    msg = "We are unable to log you in";
+                    msg = "We are unable to log you in. Wrong username or password.";
                 } else if (xhttp.responseContent == "KEY_CREATE_USER_FAILED") {
                     msg = "We cannot sign you up";
                 } else if (xhttp.responseContent == "KEY_CREATE_TUTOR_FAILED") {
@@ -68,6 +68,8 @@ var LoginPage = React.createClass({
                 } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
                     msg = "You sent a bad request";
                 }
+        document.getElementById("loginSignUpSubmitButton").style.display = 'block';
+        document.getElementById("loginSignUpSubmitSpinner").style.display = 'none';
                 t.props.displaySnackMessage("Login / Signup was not successful ");
             }
         );

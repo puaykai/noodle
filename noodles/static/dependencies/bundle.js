@@ -131,6 +131,7 @@ var App = _react2.default.createClass({
     },
     sendInfo: function sendInfo(method, url, message, callback, error_callback) {
         var xhttp = this.state.xhttp;
+        //        var xhttp = new XMLHttpRequest();
         var t = this;
         xhttp.onreadystatechange = function () {
             if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -143,11 +144,6 @@ var App = _react2.default.createClass({
         };
         var token = getCookie('csrftoken');
         xhttp.open(method, url, true);
-        //        var params = Object.keys(message).map(function(k){
-        //            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
-        //        }).join('&');
-        //        console.log(params);
-        //        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         this.state.xhttp.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
         this.state.xhttp.send(JSON.stringify(message));
@@ -155,24 +151,11 @@ var App = _react2.default.createClass({
     changePage: function changePage(page_name) {
         if (page_name == "tutor_main") {
             var t = this;
-            var studentList = [];
-            var assignmentList = [];
-            this.sendInfo("GET", "/tuition/get_ungraded_assignments/", function (xhttp) {
-                assignmentList = JSON.parse(xhttp.responseText);
-            }, function (xhttp) {
-                t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
-            });
-            this.sendInfo("GET", "/tuition/get_students/", function (xhttp) {
-                studentList = JSON.parse(xhttp.responseText);
-            }, function (xhttp) {
-                t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.");
-            });
             this.setState({
                 "current_page": _react2.default.createElement(_tutor_pages2.default, {
                     changePage: this.changePage,
                     sendInfo: this.sendInfo,
-                    studentList: studentList,
-                    assignmentList: assignmentList }),
+                    displaySnackMessage: this.displaySnackMessage }),
                 "header": _react2.default.createElement(_header2.default, {
                     changePage: this.changePage,
                     sendInfo: this.sendInfo,
@@ -191,7 +174,6 @@ var App = _react2.default.createClass({
                         } }), _react2.default.createElement(_MenuItem2.default, {
                         primaryText: 'Ungraded Assignments',
                         onClick: function onClick() {
-                            console.log("Clicked on ungraded assignments");
                             t.changePage("ungraded_assignment");
                         } }), _react2.default.createElement(_MenuItem2.default, {
                         primaryText: 'Requesting Student',
@@ -210,18 +192,11 @@ var App = _react2.default.createClass({
             });
         } else if (page_name == "student_main") {
             var t = this;
-            // TODO
-            this.sendInfo("GET", "/tuition/get_due_assignments/", function (xhttp) {// TODO
-            }, function (xhttp) {// TODO
-            });
-            // TODO
-            this.sendInfo("GET", "/tuition/get_completed_assignments/", function (xhttp) {// TODO
-            }, function (xhttp) {// TODO
-            });
             this.setState({
                 "current_page": _react2.default.createElement(_student_pages2.default, {
                     changePage: this.changePage,
-                    sendInfo: this.sendInfo }),
+                    sendInfo: this.sendInfo,
+                    displaySnackMessage: this.displaySnackMessage }),
                 "header": _react2.default.createElement(_header2.default, {
                     changePage: this.changePage,
                     sendInfo: this.sendInfo,
@@ -277,7 +252,13 @@ var App = _react2.default.createClass({
                         primaryText: 'Help',
                         onClick: function onClick() {} })] }) });
         } else if (page_name == "ungraded_assignment") {
-            console.log("In ungraded assignments");
+            var assignmentList = [];
+            var t = this;
+            this.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {}, function (xhttp) {
+                if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                    t.displaySnackMessage("The request is bad");
+                }
+            });
             this.setState({ "current_page": _react2.default.createElement(_assignment_list2.default, {
                     sendInfo: this.sendInfo,
                     changePage: this.changePage }) });
@@ -305,7 +286,8 @@ var App = _react2.default.createClass({
         } else if (page_name == 'requesting_students') {
             this.setState({ "current_page": _react2.default.createElement(_requesting_students2.default, {
                     sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
+                    changePage: this.changePage,
+                    displaySnackMessage: this.displaySnackMessage }) });
         }
     },
     render: function render() {
@@ -69463,6 +69445,18 @@ var _list_components = require('./list_components');
 
 var _list_components2 = _interopRequireDefault(_list_components);
 
+var _assignment = require('./assignment');
+
+var _assignment2 = _interopRequireDefault(_assignment);
+
+var _Avatar = require('material-ui/Avatar');
+
+var _Avatar2 = _interopRequireDefault(_Avatar);
+
+var _RaisedButton = require('material-ui/RaisedButton');
+
+var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var AssignmentsList = _react2.default.createClass({
@@ -69472,17 +69466,37 @@ var AssignmentsList = _react2.default.createClass({
         return {};
     },
     getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
+        var t = this;
+        var grade_assignment = function grade_assignment() {
+            this.props.sendInfo("GET", "/tuition/get_assignments/", {}, function (xhttp) {
+                console.log("get assignments : " + xhttp.responseText);
+            }, function (xhttp) {
+                console.log("get assignments error : " + xhttp.responseText);
+            });
+            this.props.changePage("assignment");
+        };
         return jsonList.map(function (jsonOb) {
             return _react2.default.createElement(_List2.default, {
-                leftAvatar: _react2.default.createElement(Avatar, { src: jsonOb.source }),
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
                 primaryText: jsonOb.studentName,
                 secondaryText: _react2.default.createElement(
-                    'p',
+                    'div',
                     null,
                     _react2.default.createElement(
-                        'span',
+                        'p',
                         null,
-                        jsonOb.assignmentName
+                        _react2.default.createElement(
+                            'span',
+                            null,
+                            jsonOb.assignmentName
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        null,
+                        _react2.default.createElement(_RaisedButton2.default, {
+                            label: 'Grade',
+                            onClick: grade_assignment })
                     )
                 ),
                 secondaryTextLines: 2 });
@@ -69533,7 +69547,7 @@ var AssignmentsList = _react2.default.createClass({
 
 exports.default = AssignmentsList;
 
-},{"./list_components":474,"material-ui/List":220,"material-ui/TextField":254,"react":456,"react-dom":308}],471:[function(require,module,exports){
+},{"./assignment":469,"./list_components":474,"material-ui/Avatar":184,"material-ui/List":220,"material-ui/RaisedButton":234,"material-ui/TextField":254,"react":456,"react-dom":308}],471:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -69685,6 +69699,10 @@ var _List = require('material-ui/List');
 
 var _List2 = _interopRequireDefault(_List);
 
+var _Avatar = require('material-ui/Avatar');
+
+var _Avatar2 = _interopRequireDefault(_Avatar);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var LeaderBoard = _react2.default.createClass({
@@ -69698,7 +69716,7 @@ var LeaderBoard = _react2.default.createClass({
     getLeaderBoardListFromJson: function getLeaderBoardListFromJson(jsonList) {
         return jsonList.map(function (jsonOb) {
             return _react2.default.createElement(_List2.default, {
-                leftAvatar: _react2.default.createElement(Avatar, { src: jsonOb.source }),
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
                 primaryText: jsonOb.name,
                 secondaryText: _react2.default.createElement(
                     'p',
@@ -69758,7 +69776,7 @@ var LeaderBoard = _react2.default.createClass({
 
 exports.default = LeaderBoard;
 
-},{"./list_components":474,"material-ui/List":220,"material-ui/MenuItem":222,"material-ui/SelectField":236,"react":456,"react-dom":308}],474:[function(require,module,exports){
+},{"./list_components":474,"material-ui/Avatar":184,"material-ui/List":220,"material-ui/MenuItem":222,"material-ui/SelectField":236,"react":456,"react-dom":308}],474:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -69885,7 +69903,7 @@ var LoginPage = _react2.default.createClass({
             if (xhttp.responseContent == "KEY_USER_ACCOUNT_DISABLED") {
                 msg = "Your account has been disabled";
             } else if (xhttp.responseContent == "KEY_INVALID_LOGIN") {
-                msg = "We are unable to log you in";
+                msg = "We are unable to log you in. Wrong username or password.";
             } else if (xhttp.responseContent == "KEY_CREATE_USER_FAILED") {
                 msg = "We cannot sign you up";
             } else if (xhttp.responseContent == "KEY_CREATE_TUTOR_FAILED") {
@@ -69895,6 +69913,8 @@ var LoginPage = _react2.default.createClass({
             } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
                 msg = "You sent a bad request";
             }
+            document.getElementById("loginSignUpSubmitButton").style.display = 'block';
+            document.getElementById("loginSignUpSubmitSpinner").style.display = 'none';
             t.props.displaySnackMessage("Login / Signup was not successful ");
         });
     },
@@ -70087,6 +70107,8 @@ var NewAssignmentPage = _react2.default.createClass({
         }
         var t = this;
         this.props.sendInfo("POST", "/tuition/new_assignment/", {
+            "name": document.getElementById("newAssignmentName").value,
+            "due_date": document.getElementById("newAssignmentDueDate").value,
             "questions": q
         }, function (xhttp) {
             t.props.displaySnackMessage("Your assignment has been saved!");
@@ -70128,11 +70150,13 @@ var NewAssignmentPage = _react2.default.createClass({
                     'div',
                     { style: style },
                     _react2.default.createElement(_TextField2.default, {
+                        id: 'newAssignmentName',
                         hintText: 'Enter Assignment Name',
                         maxlength: '255',
                         floatingLabelText: 'Click to set assignment name',
                         floatingLabelFixed: true }),
                     _react2.default.createElement(_DatePicker2.default, {
+                        id: 'newAssignmentDueDate',
                         floatingLabelText: 'Assignment Due Date',
                         hintText: 'Click to set assignment due date',
                         mode: 'landscape' }),
@@ -70232,19 +70256,97 @@ var _list_components = require('./list_components');
 
 var _list_components2 = _interopRequireDefault(_list_components);
 
+var _List = require('material-ui/List');
+
+var _Avatar = require('material-ui/Avatar');
+
+var _Avatar2 = _interopRequireDefault(_Avatar);
+
+var _RaisedButton = require('material-ui/RaisedButton');
+
+var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
+
+var _CircularProgress = require('material-ui/CircularProgress');
+
+var _CircularProgress2 = _interopRequireDefault(_CircularProgress);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RequestingStudentsPage = _react2.default.createClass({
     displayName: 'RequestingStudentsPage',
 
+    componentWillMount: function componentWillMount() {
+        var t = this;
+        this.props.sendInfo("GET", "/tuition/get_requesting_students/", {}, function (xhttp) {
+            console.log("requesting students raw : " + xhttp.responseText);
+            var requesting_students = JSON.parse(xhttp.responseText);
+            console.log("requesting students : " + requesting_students);
+            t.setState({
+                requestingStudents: requesting_students
+            });
+        }, function (xhttp) {
+            if (xhttp.responseText == "KEY_NOT_A_TUTOR") {
+                t.props.displaySnackMessage("Please try and login again");
+            } else if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                t.props.displaySnackMessage("This is a bad request");
+            }
+        });
+    },
     getInitialState: function getInitialState() {
-        return {};
+        return {
+            requestingStudents: []
+        };
     },
     getRequestingStudentsFromJson: function getRequestingStudentsFromJson(jsonList) {
+        var t = this;
         return jsonList.map(function (jsonOb) {
-            return _react2.default.createElement(ListItem, {
-                leftAvatar: _react2.default.createElement(Avatar, { src: jsobOb.source }),
-                primaryText: jsonOb.name });
+            var student_id = jsonOb.id;
+            console.log("student id " + student_id);
+            var acceptStudent = function acceptStudent() {
+                document.getElementById("requestingStudentAcceptStudentButton").style.display = "none";
+                document.getElementById("requestingStudentAcceptStudentSpinner").style.display = "block";
+                t.props.sendInfo("POST", "/tuition/accept_student/", { "student_id": student_id }, function (xhttp) {
+                    t.props.displaySnackMessage("You have successfully added student!");
+                    document.getElementById("requestingStudentAcceptStudentSpinner").style.display = "none";
+                }, function (xhttp) {
+                    var msg = "";
+                    if (xhttp.responseText == "KEY_NO_SUCH_STUDENT") {
+                        msg = "There is no such student. Please try login again.";
+                    } else if (xhttp.responseText == "KEY_NO_SUCH_TUTOR") {
+                        msg = "Please login and try again";
+                    } else if (xhttp.responseText == "KEY_STUDENT_DID_NOT_REQUEST_FOR_TUTOR") {
+                        msg = "Student has removed you as requested tutor, please click on requesting students page again";
+                    } else if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                        msg = "You have sent a bad request";
+                    }
+                    t.props.displaySnackMessage(msg);
+                    document.getElementById("requestingStudentAcceptStudentButton").style.display = "block";
+                    document.getElementById("requestingStudentAcceptStudentSpinner").style.display = "none";
+                });
+            };
+            return _react2.default.createElement(_List.ListItem, {
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.user__profile__avatar }),
+                primaryText: _react2.default.createElement(
+                    'div',
+                    null,
+                    _react2.default.createElement(
+                        'span',
+                        null,
+                        jsonOb.user__username
+                    ),
+                    _react2.default.createElement(_CircularProgress2.default, {
+                        id: 'requestingStudentAcceptStudentSpinner',
+                        ref: function ref(input) {
+                            if (input != null) {
+                                document.getElementById("requestingStudentAcceptStudentSpinner").style.display = "none";
+                            }
+                        } }),
+                    _react2.default.createElement(_RaisedButton2.default, {
+                        id: 'requestingStudentAcceptStudentButton',
+                        label: 'Accept',
+                        onClick: acceptStudent })
+                )
+            });
         });
     },
     render: function render() {
@@ -70261,22 +70363,22 @@ var RequestingStudentsPage = _react2.default.createClass({
         };
         return _react2.default.createElement(
             'div',
-            { style: styles.centerList },
+            null,
             _react2.default.createElement(
                 'h4',
                 null,
                 'Requesting Students'
             ),
             _react2.default.createElement(_list_components2.default, {
-                default_empty_message: 'You do no have requesting students',
-                menu_items: this.getRequestingStudentsFromJson([{ source: "", name: "Kim Mui" }]) })
+                default_empty_message: 'You do not have requesting students',
+                menu_items: this.getRequestingStudentsFromJson(this.state.requestingStudents) })
         );
     }
 });
 
 exports.default = RequestingStudentsPage;
 
-},{"./list_components":474,"react":456,"react-dom":308}],479:[function(require,module,exports){
+},{"./list_components":474,"material-ui/Avatar":184,"material-ui/CircularProgress":186,"material-ui/List":220,"material-ui/RaisedButton":234,"react":456,"react-dom":308}],479:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -70305,45 +70407,117 @@ var _list_components = require('./list_components');
 
 var _list_components2 = _interopRequireDefault(_list_components);
 
+var _RaisedButton = require('material-ui/RaisedButton');
+
+var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
+
+var _CircularProgress = require('material-ui/CircularProgress');
+
+var _CircularProgress2 = _interopRequireDefault(_CircularProgress);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var StudentMainPage = _react2.default.createClass({
     displayName: 'StudentMainPage',
 
+    componentWillMount: function componentWillMount() {
+        var t = this;
+        this.props.sendInfo("GET", "/tuition/get_due_assignments/", function (xhttp) {
+            console.log("raw due assignments : " + xhttp.responseText);
+            var due_assignments = JSON.parse(xhttp.responseText);
+            console.log("due_assignments : " + due_assignments);
+            t.props.sendInfo("GET", "/tuition/get_completed_assignments/", function (xhttpa) {
+                var completed_assignments = JSON.parse(xhttpa.responseText);
+                console.log("Due assignments : " + due_assignments);
+                console.log("Completed assignments : " + completed_assignments);
+                t.setState({
+                    due_assignments: due_assignments,
+                    completed_assignments: completed_assignments
+                });
+            }, function (xhttpa) {
+                t.props.displaySnackMessage("Cannot get your completed assignments");
+            });
+        }, function (xhttp) {
+            t.props.displaySnackMessage("Cannot get your due assignments");
+        });
+    },
     getInitialState: function getInitialState() {
-        return {};
+        return {
+            due_assignments: [],
+            completed_assignments: []
+        };
     },
     getCompletedAssignmentsFromJson: function getCompletedAssignmentsFromJson(jsonList) {
+        var t = this;
         return jsonList.map(function (jsonOb) {
+            var reviewAssignment = function reviewAssignment() {
+                document.getElementById("studentMainReviewAssignmentSpinner").style.display = "block";
+                document.getElementById("studentMainReviewAssignmentButton").style.display = "none";
+            };
             return _react2.default.createElement(_List2.default, {
                 primaryText: jsonOb.name,
                 secondaryText: _react2.default.createElement(
-                    'p',
+                    'div',
                     null,
                     _react2.default.createElement(
-                        'span',
+                        'p',
                         null,
-                        'Due Date'
+                        _react2.default.createElement(
+                            'span',
+                            null,
+                            'Due Date'
+                        ),
+                        ' :',
+                        jsonOb.marks
                     ),
-                    ' :',
-                    jsonOb.marks
+                    _react2.default.createElement(_CircularProgress2.default, {
+                        id: 'studentMainReviewAssignmentSpinner',
+                        ref: function ref(input) {
+                            if (input != null) {
+                                document.getElementById("studentMainReviewAssignmentSpinner").style.display = "none";
+                            }
+                        } }),
+                    _react2.default.createElement(_RaisedButton2.default, {
+                        id: 'studentMainReviewAssignmentButton',
+                        label: 'Review Assignment',
+                        onClick: reviewAssignment })
                 ) });
         });
     },
     getDueAssignmentsFromJson: function getDueAssignmentsFromJson(jsonList) {
+        var t = this;
         return jsonList.map(function (jsonOb) {
+            var doAssignment = function doAssignment() {
+                document.getElementById("studentMainDoAssignmentSpinner").style.display = "block";
+                document.getElementById("studentMainDoAssignmentButton").style.display = "none";
+            };
             return _react2.default.createElement(_List2.default, {
                 primaryText: jsonOb.name,
                 secondaryText: _react2.default.createElement(
-                    'p',
+                    'div',
                     null,
                     _react2.default.createElement(
-                        'span',
+                        'p',
                         null,
-                        'Due Date'
+                        _react2.default.createElement(
+                            'span',
+                            null,
+                            'Due Date'
+                        ),
+                        ' :',
+                        jsonOb.dueDate
                     ),
-                    ' :',
-                    jsonOb.dueDate
+                    _react2.default.createElement(_CircularProgress2.default, {
+                        id: 'studentMainDoAssignmentSpinner',
+                        ref: function ref(input) {
+                            if (input != null) {
+                                document.getElementById("studentMainDoAssignmentSpinner").style.display = "none";
+                            }
+                        } }),
+                    _react2.default.createElement(_RaisedButton2.default, {
+                        id: 'studentMainDoAssignmentButton',
+                        label: 'Do Assignment',
+                        onClick: doAssignment })
                 ) });
         });
     },
@@ -70396,7 +70570,7 @@ var StudentMainPage = _react2.default.createClass({
 
 exports.default = StudentMainPage;
 
-},{"./list_components":474,"material-ui/Avatar":184,"material-ui/List":220,"material-ui/Tabs":248,"react":456,"react-dom":308}],480:[function(require,module,exports){
+},{"./list_components":474,"material-ui/Avatar":184,"material-ui/CircularProgress":186,"material-ui/List":220,"material-ui/RaisedButton":234,"material-ui/Tabs":248,"react":456,"react-dom":308}],480:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -70527,7 +70701,7 @@ exports.default = TutorList;
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
 var _react = require('react');
@@ -70553,118 +70727,141 @@ var _list_components2 = _interopRequireDefault(_list_components);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var TutorMainPage = _react2.default.createClass({
-  displayName: 'TutorMainPage',
+    displayName: 'TutorMainPage',
 
-  getInitialState: function getInitialState() {
-    return {};
-  },
-  getStudentListFromJson: function getStudentListFromJson(jsonList) {
-    var styles = {
-      centerItem: {
-        display: 'flex',
-        flexDirection: 'row wrap',
-        padding: 5,
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    };
-    return jsonList.map(function (jsonOb) {
-      console.log(jsonOb);
-      return _react2.default.createElement(_List.ListItem, {
-        style: styles.centerItem,
-        leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
-        primaryText: jsonOb.name,
-        secondaryText: _react2.default.createElement(
-          'p',
-          null,
-          _react2.default.createElement(
-            'span',
-            null,
-            'Total score'
-          ),
-          ' :',
-          jsonOb.totalScore
-        ),
-        secondaryTextLines: 2
-      });
-    });
-  },
-  getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
-    var styles = {
-      centerItem: {
-        display: 'flex',
-        flexDirection: 'row wrap',
-        padding: 5,
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    };
-    return jsonList.map(function (jsonOb) {
-      console.log("assignment object : name : " + jsonOb.name + " totalCOmpleted : " + jsonOb.totalCompleted);
-      return _react2.default.createElement(_List.ListItem, {
-        style: styles.centerItem,
-        primaryText: jsonOb.name,
-        secondaryText: _react2.default.createElement(
-          'p',
-          null,
-          _react2.default.createElement(
-            'span',
-            null,
-            'Total completed'
-          ),
-          ' :',
-          jsonOb.totalCompleted
-        ),
-        secondaryTextLines: 2
-      });
-    });
-  },
-  render: function render() {
-    console.log("student list : " + this.props.studentList);
-    console.log("assignment list : " + this.props.assignmentList);
-    var styles = {
-      headline: {
-        fontSize: 24,
-        paddingTop: 16,
-        marginBottom: 12,
-        fontWeight: 400
-      },
-      centerItem: {
-        width: "60%"
-      },
-      centerList: {
-        width: "60%",
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    };
+    componentWillMount: function componentWillMount() {
+        var t = this.props;
+        var th = this;
+        var studentLista = [];
+        var assignmentLista = [];
+        this.props.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {
+            console.log("before parsing assignment : " + xhttp.responseText);
+            assignmentLista = JSON.parse(xhttp.responseText);
+            console.log("parsed assignment list : " + assignmentLista);
+            t.sendInfo("GET", "/tuition/get_students/", {}, function (xhttpa) {
+                console.log("before parsing student : " + xhttp.responseText);
+                studentLista = JSON.parse(xhttpa.responseText);
+                console.log("parsed student list : " + studentLista);
 
-    return _react2.default.createElement(
-      'div',
-      null,
-      _react2.default.createElement(
-        _Tabs.Tabs,
-        null,
-        _react2.default.createElement(
-          _Tabs.Tab,
-          { label: 'Assignments' },
-          _react2.default.createElement(_list_components2.default, {
-            default_empty_message: "You have not created any assignments yet.",
-            menu_items: this.getAssignmentListFromJson([{ name: "Simultaneous Equation 1", dueDate: "", totalCompleted: "0" }])
-          })
-        ),
-        _react2.default.createElement(
-          _Tabs.Tab,
-          { label: 'Students' },
-          _react2.default.createElement(_list_components2.default, {
-            default_empty_message: "You do have any students yet.",
-            menu_items: this.getStudentListFromJson([{ source: "", name: "Brendan Lim", totalScore: "10" }]) })
-        )
-      )
-    );
-  }
+                th.setState({
+                    studentList: studentLista,
+                    assignmentList: assignmentLista
+                });
+            }, function (xhttpa) {
+                t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.");
+            });
+        }, function (xhttp) {
+            t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
+        });
+    },
+    getInitialState: function getInitialState() {
+        return {
+            studentList: [],
+            assignmentList: []
+        };
+    },
+    getStudentListFromJson: function getStudentListFromJson(jsonList) {
+        var styles = {
+            centerItem: {
+                display: 'flex',
+                flexDirection: 'row wrap',
+                padding: 5,
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }
+        };
+        return jsonList.map(function (jsonOb) {
+            console.log(jsonOb);
+            return _react2.default.createElement(_List.ListItem, {
+                style: styles.centerItem,
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
+                primaryText: jsonOb.name,
+                secondaryText: _react2.default.createElement(
+                    'p',
+                    null,
+                    _react2.default.createElement(
+                        'span',
+                        null,
+                        'Total score'
+                    ),
+                    ' :',
+                    jsonOb.total_score
+                ),
+                secondaryTextLines: 2
+            });
+        });
+    },
+    getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
+        return jsonList.map(function (jsonOb) {
+            return _react2.default.createElement(_List.ListItem, {
+                primaryText: jsonOb.name,
+                secondaryText: _react2.default.createElement(
+                    'p',
+                    null,
+                    _react2.default.createElement(
+                        'span',
+                        null,
+                        'Due Date'
+                    ),
+                    ' :',
+                    jsonOb.due_date
+                ),
+                secondaryTextLines: 2
+            });
+        });
+    },
+    render: function render() {
+        var styles = {
+            headline: {
+                fontSize: 24,
+                paddingTop: 16,
+                marginBottom: 12,
+                fontWeight: 400
+            },
+            centerItem: {
+                width: "60%"
+            },
+            centerList: {
+                width: "60%",
+                alignItems: 'center',
+                justifyContent: 'center'
+            }
+        };
+        console.log("assignmentList : " + this.state.assignmentList);
+        console.log("studentList : " + this.state.studentList);
+        return _react2.default.createElement(
+            'div',
+            null,
+            _react2.default.createElement(
+                _Tabs.Tabs,
+                null,
+                _react2.default.createElement(
+                    _Tabs.Tab,
+                    { label: 'Assignments' },
+                    _react2.default.createElement(_list_components2.default, {
+                        default_empty_message: "You have not created any assignments yet.",
+                        menu_items: this.getAssignmentListFromJson(
+                        //                [
+                        //                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
+                        //                ]
+                        this.state.assignmentList)
+                    })
+                ),
+                _react2.default.createElement(
+                    _Tabs.Tab,
+                    { label: 'Students' },
+                    _react2.default.createElement(_list_components2.default, {
+                        default_empty_message: "You do have any students yet.",
+                        menu_items: this.getStudentListFromJson(
+                        //            [
+                        //            {source:"", name:"Brendan Lim", totalScore:"10"}
+                        //            ]
+                        this.state.studentList) })
+                )
+            )
+        );
+    }
 });
 
 exports.default = TutorMainPage;

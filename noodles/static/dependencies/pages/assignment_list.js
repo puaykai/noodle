@@ -13,24 +13,37 @@ var AssignmentsList = React.createClass({
         return {};
     },
     getAssignmentListFromJson:function(jsonList){
+        var t = this;
+        var grade_assignment = function(){
+            this.props.sendInfo(
+                "GET",
+                "/tuition/get_assignments/",
+                {},
+                function(xhttp){
+                    console.log("get assignments : " + xhttp.responseText);
+                },
+                function(xhttp){
+                    console.log("get assignments error : " + xhttp.responseText);
+                }
+            );
+            this.props.changePage("assignment");
+        };
         return (jsonList.map(function(jsonOb){
-            var t = this;
             return (
                 <ListItem
                     leftAvatar={<Avatar src={jsonOb.source}/>}
                     primaryText={jsonOb.studentName}
                     secondaryText={
+                    <div>
                         <p>
                             <span>{jsonOb.assignmentName}</span>
                         </p>
                         <div>
                             <RaisedButton
                                 label="Grade"
-                                onClick=function(){
-                                    t.sendInfo(); //TODO fetch assignment information
-                                    t.changePage("assignment");
-                                }/>
+                                onClick={grade_assignment}/>
                         </div>
+                    </div>
                     }
                     secondaryTextLines={2}/>
             );

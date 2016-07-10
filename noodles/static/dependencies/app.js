@@ -72,6 +72,7 @@ var App = React.createClass({
     },
     sendInfo:function(method, url, message, callback, error_callback){
         var xhttp = this.state.xhttp;
+//        var xhttp = new XMLHttpRequest();
         var t = this;
         xhttp.onreadystatechange = function() {
             if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -84,11 +85,6 @@ var App = React.createClass({
         }
         var token = getCookie('csrftoken');
         xhttp.open(method, url, true);
-//        var params = Object.keys(message).map(function(k){
-//            return encodeURIComponent(k) + "=" + encodeURIComponent(message[k]);
-//        }).join('&');
-//        console.log(params);
-//        this.state.xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         this.state.xhttp.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
         this.state.xhttp.send(JSON.stringify(message));
@@ -96,34 +92,11 @@ var App = React.createClass({
     changePage: function(page_name){
         if (page_name == "tutor_main") {
             var t = this;
-            var studentList = [];
-            var assignmentList = [];
-            this.sendInfo(
-                "GET",
-                "/tuition/get_ungraded_assignments/",
-                function(xhttp){
-                    assignmentList = JSON.parse(xhttp.responseText);
-                },
-                function(xhttp){
-                    t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
-                }
-            );
-            this.sendInfo(
-                "GET",
-                "/tuition/get_students/",
-                function(xhttp){
-                    studentList = JSON.parse(xhttp.responseText);
-                },
-                function(xhttp){
-                    t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.")
-                }
-            );
             this.setState({
             "current_page":<TutorMainPage
                                 changePage={this.changePage}
                                 sendInfo={this.sendInfo}
-                                studentList={studentList}
-                                assignmentList={assignmentList}/>,
+                                displaySnackMessage={this.displaySnackMessage}/>,
             "header":<Header
                         changePage={this.changePage}
                         sendInfo={this.sendInfo}
@@ -174,28 +147,11 @@ var App = React.createClass({
             });
         } else if (page_name == "student_main") {
             var t = this;
-            // TODO
-            this.sendInfo(
-                "GET",
-                "/tuition/get_due_assignments/",
-                function(xhttp){// TODO
-                },
-                function(xhttp){// TODO
-                }
-            );
-            // TODO
-            this.sendInfo(
-                "GET",
-                "/tuition/get_completed_assignments/",
-                function(xhttp){// TODO
-                },
-                function(xhttp){// TODO
-                }
-            );
             this.setState({
             "current_page":<StudentMainPage
                                 changePage={this.changePage}
-                                sendInfo={this.sendInfo}/>,
+                                sendInfo={this.sendInfo}
+                                displaySnackMessage={this.displaySnackMessage}/>,
             "header":<Header
                         changePage={this.changePage}
                         sendInfo={this.sendInfo}
@@ -315,7 +271,8 @@ var App = React.createClass({
         } else if (page_name == 'requesting_students') {
             this.setState({"current_page":<RequestingStudentsPage
                                             sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
+                                            changePage={this.changePage}
+                                            displaySnackMessage={this.displaySnackMessage}/>});
         }
     },
     render: function(){

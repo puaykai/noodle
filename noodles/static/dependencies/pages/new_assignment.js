@@ -73,6 +73,8 @@ var NewAssignmentPage = React.createClass({
             "POST",
             "/tuition/new_assignment/",
             {
+                "name":document.getElementById("newAssignmentName").value,
+                "due_date":document.getElementById("newAssignmentDueDate").value,
                 "questions":q
             },
             function(xhttp){
@@ -114,11 +116,13 @@ var NewAssignmentPage = React.createClass({
                 children={<div>
                     <div style={style}>
                         <TextField
+                          id="newAssignmentName"
                           hintText="Enter Assignment Name"
                           maxlength="255"
                           floatingLabelText="Click to set assignment name"
                           floatingLabelFixed={true} />
                         <DatePicker
+                            id="newAssignmentDueDate"
                             floatingLabelText="Assignment Due Date"
                             hintText="Click to set assignment due date"
                             mode="landscape" />

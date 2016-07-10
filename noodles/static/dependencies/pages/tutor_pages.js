@@ -6,8 +6,48 @@ import {ListItem, List} from 'material-ui/List';
 import GenericList from './list_components';
 
 var TutorMainPage = React.createClass({
+    componentWillMount: function(){
+        var t = this.props;
+        var th = this;
+        var studentLista = [];
+        var assignmentLista = [];
+        this.props.sendInfo(
+            "GET",
+            "/tuition/get_ungraded_assignment/",
+            {},
+            function(xhttp){
+                console.log("before parsing assignment : " + xhttp.responseText);
+                assignmentLista = JSON.parse(xhttp.responseText);
+                console.log("parsed assignment list : " + assignmentLista);
+                t.sendInfo(
+                    "GET",
+                    "/tuition/get_students/",
+                    {},
+                    function(xhttpa){
+                        console.log("before parsing student : " + xhttp.responseText);
+                        studentLista = JSON.parse(xhttpa.responseText);
+                        console.log("parsed student list : " + studentLista);
+
+                        th.setState({
+                            studentList:studentLista,
+                            assignmentList:assignmentLista
+                        });
+                    },
+                    function(xhttpa){
+                        t.displaySnackMessage("There was some problem retrieving your students. Please login and try again.")
+                    }
+                );
+            },
+            function(xhttp){
+                t.displaySnackMessage("There was some problem retrieving your assignments. Please login and try again.");
+            }
+        );
+    },
     getInitialState: function(){
-        return {};
+        return {
+            studentList:[],
+            assignmentList:[]
+        };
     },
     getStudentListFromJson: function(jsonList){
         const styles = {
@@ -30,7 +70,7 @@ var TutorMainPage = React.createClass({
                   secondaryText={
                     <p>
                       <span>Total score</span> :
-                      {jsonOb.totalScore}
+                      {jsonOb.total_score}
                     </p>
                   }
                   secondaryTextLines={2}
@@ -39,26 +79,14 @@ var TutorMainPage = React.createClass({
         }));
     },
     getAssignmentListFromJson: function(jsonList){
-        const styles = {
-          centerItem: {
-            display: 'flex',
-            flexDirection: 'row wrap',
-            padding: 5,
-            flex:1,
-            alignItems:'center',
-            justifyContent:'center'
-          }
-        };
         return (jsonList.map(function(jsonOb){
-        console.log("assignment object : name : " + jsonOb.name + " totalCOmpleted : " + jsonOb.totalCompleted);
             return (
                 <ListItem
-                    style={styles.centerItem}
                     primaryText={jsonOb.name}
                     secondaryText={
                         <p>
-                            <span>Total completed</span> :
-                            {jsonOb.totalCompleted}
+                            <span>Due Date</span> :
+                            {jsonOb.due_date}
                         </p>
                     }
                   secondaryTextLines={2}
@@ -67,8 +95,6 @@ var TutorMainPage = React.createClass({
         }));
     },
     render: function(){
-        console.log("student list : " + this.props.studentList);
-        console.log("assignment list : " + this.props.assignmentList);
         const styles = {
           headline: {
             fontSize: 24,
@@ -85,7 +111,8 @@ var TutorMainPage = React.createClass({
             justifyContent:'center'
           }
         };
-
+        console.log("assignmentList : " + this.state.assignmentList);
+        console.log("studentList : " + this.state.studentList);
         return (
         <div>
         <Tabs>
@@ -94,9 +121,10 @@ var TutorMainPage = React.createClass({
                 default_empty_message={"You have not created any assignments yet."}
                 menu_items={
                 this.getAssignmentListFromJson(
-                [
-                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
-                ]
+//                [
+//                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
+//                ]
+                this.state.assignmentList
                 )
                 }
                 />
@@ -106,9 +134,10 @@ var TutorMainPage = React.createClass({
             default_empty_message={"You do have any students yet."}
             menu_items={
             this.getStudentListFromJson(
-            [
-            {source:"", name:"Brendan Lim", totalScore:"10"}
-            ]
+//            [
+//            {source:"", name:"Brendan Lim", totalScore:"10"}
+//            ]
+            this.state.studentList
             )
             }/>
     </Tab>
