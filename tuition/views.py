@@ -74,8 +74,11 @@ def new_assignment(request):
 
 @login_required
 def get_assignment(request):
-    if request.method == "GET" and request.GET.get("assignment_id"):
-        return HttpResponse(Assignment.get_assignment(request.GET.get("assignment_id")), status=200)
+    print "getting assignment : %s" % request.GET
+    print "getting assignment request body : %s" % request.body
+    if request.method == "POST" and request.body:
+        request.POST = loads(request.body)
+        return HttpResponse(Assignment.get_assignment(request.POST.get("assignment_id")), status=200)
     else:
         return HttpResponse("KEY_BAD_REQUEST", status=400)
 
@@ -151,7 +154,7 @@ def get_due_assignments(request):
 def get_completed_assignments(request):
     if request.method == "GET":
         try:
-            student = Student.object.get(user=request.user)
+            student = Student.objects.get(user=request.user)
         except:
             return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
         print "completed assignments : %s " % Student.get_completed_assignments(student)

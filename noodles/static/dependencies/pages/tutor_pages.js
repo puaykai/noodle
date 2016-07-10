@@ -65,8 +65,8 @@ var TutorMainPage = React.createClass({
             return (
                 <ListItem
                   style={styles.centerItem}
-                  leftAvatar={<Avatar src={jsonOb.source}/>}
-                  primaryText={jsonOb.name}
+                  leftAvatar={<Avatar src={jsonOb.user__profile__avatar}/>}
+                  primaryText={jsonOb.user__username}
                   secondaryText={
                     <p>
                       <span>Total score</span> :

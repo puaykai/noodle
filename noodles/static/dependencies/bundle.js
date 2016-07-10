@@ -70401,8 +70401,6 @@ var _Tabs = require('material-ui/Tabs');
 
 var _List = require('material-ui/List');
 
-var _List2 = _interopRequireDefault(_List);
-
 var _list_components = require('./list_components');
 
 var _list_components2 = _interopRequireDefault(_list_components);
@@ -70422,107 +70420,109 @@ var StudentMainPage = _react2.default.createClass({
 
     componentWillMount: function componentWillMount() {
         var t = this;
-        this.props.sendInfo("GET", "/tuition/get_due_assignments/", function (xhttp) {
-            console.log("raw due assignments : " + xhttp.responseText);
+        this.props.sendInfo("GET", "/tuition/get_due_assignments/", {}, function (xhttp) {
             var due_assignments = JSON.parse(xhttp.responseText);
-            console.log("due_assignments : " + due_assignments);
-            t.props.sendInfo("GET", "/tuition/get_completed_assignments/", function (xhttpa) {
+            t.props.sendInfo("GET", "/tuition/get_completed_assignments/", {}, function (xhttpa) {
                 var completed_assignments = JSON.parse(xhttpa.responseText);
-                console.log("Due assignments : " + due_assignments);
-                console.log("Completed assignments : " + completed_assignments);
                 t.setState({
-                    due_assignments: due_assignments,
-                    completed_assignments: completed_assignments
+                    dueAssignments: due_assignments,
+                    completedAssignments: completed_assignments
                 });
             }, function (xhttpa) {
-                t.props.displaySnackMessage("Cannot get your completed assignments");
+                var msg = "";
+                if (xhttpa.responseText == "KEY_USER_IS_NOT_A_STUDENT") {
+                    msg = "Please try to login again";
+                } else if (xhttpa.responseText == "KEY_BAD_RESPONSE") {
+                    msg = "You sent a bad response";
+                }
+                t.props.displaySnackMessage(msg);
             });
         }, function (xhttp) {
-            t.props.displaySnackMessage("Cannot get your due assignments");
+            var msg = "";
+            if (xhttp.responseText == "KEY_USER_IS_NOT_A_STUDENT") {
+                msg = "Please try to login again";
+            } else if (xhttp.responseText == "KEY_BAD_RESPONSE") {
+                msg = "You send a bad response";
+            }
+            t.props.displaySnackMessage(msg);
         });
     },
     getInitialState: function getInitialState() {
         return {
-            due_assignments: [],
-            completed_assignments: []
+            dueAssignments: [],
+            completedAssignments: []
         };
     },
     getCompletedAssignmentsFromJson: function getCompletedAssignmentsFromJson(jsonList) {
+        var styles = {
+            centerItem: {
+                display: 'flex',
+                flexDirection: 'row wrap',
+                padding: 5,
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }
+        };
         var t = this;
         return jsonList.map(function (jsonOb) {
-            var reviewAssignment = function reviewAssignment() {
-                document.getElementById("studentMainReviewAssignmentSpinner").style.display = "block";
-                document.getElementById("studentMainReviewAssignmentButton").style.display = "none";
-            };
-            return _react2.default.createElement(_List2.default, {
+            var reviewAssignment = function reviewAssignment() {};
+            return _react2.default.createElement(_List.ListItem, {
+                onClick: reviewAssignment,
                 primaryText: jsonOb.name,
                 secondaryText: _react2.default.createElement(
                     'div',
                     null,
                     _react2.default.createElement(
-                        'p',
+                        'span',
                         null,
-                        _react2.default.createElement(
-                            'span',
-                            null,
-                            'Due Date'
-                        ),
-                        ' :',
-                        jsonOb.marks
+                        'Due Date'
                     ),
-                    _react2.default.createElement(_CircularProgress2.default, {
-                        id: 'studentMainReviewAssignmentSpinner',
-                        ref: function ref(input) {
-                            if (input != null) {
-                                document.getElementById("studentMainReviewAssignmentSpinner").style.display = "none";
-                            }
-                        } }),
-                    _react2.default.createElement(_RaisedButton2.default, {
-                        id: 'studentMainReviewAssignmentButton',
-                        label: 'Review Assignment',
-                        onClick: reviewAssignment })
-                ) });
+                    ' :',
+                    jsonOb.marks
+                ),
+                secondaryTextLines: 2 });
         });
     },
     getDueAssignmentsFromJson: function getDueAssignmentsFromJson(jsonList) {
+        var styles = {
+            centerItem: {
+                display: 'flex',
+                flexDirection: 'row wrap',
+                padding: 5,
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }
+        };
         var t = this;
         return jsonList.map(function (jsonOb) {
             var doAssignment = function doAssignment() {
-                document.getElementById("studentMainDoAssignmentSpinner").style.display = "block";
-                document.getElementById("studentMainDoAssignmentButton").style.display = "none";
+                console.log("DUE ASSIGNMENT ID : " + jsonOb.id);
+                t.props.sendInfo("POST", "/tuition/get_assignment/", { "assignment_id": jsonOb.id }, function (xhttp) {
+                    console.log("response good: " + xhttp.responseText);
+                }, function (xhttp) {
+                    console.log("response bad : " + xhttp.responseText);
+                });
             };
-            return _react2.default.createElement(_List2.default, {
+            return _react2.default.createElement(_List.ListItem, {
+                onClick: doAssignment,
                 primaryText: jsonOb.name,
                 secondaryText: _react2.default.createElement(
                     'div',
                     null,
                     _react2.default.createElement(
-                        'p',
+                        'span',
                         null,
-                        _react2.default.createElement(
-                            'span',
-                            null,
-                            'Due Date'
-                        ),
-                        ' :',
-                        jsonOb.dueDate
+                        'Due Date'
                     ),
-                    _react2.default.createElement(_CircularProgress2.default, {
-                        id: 'studentMainDoAssignmentSpinner',
-                        ref: function ref(input) {
-                            if (input != null) {
-                                document.getElementById("studentMainDoAssignmentSpinner").style.display = "none";
-                            }
-                        } }),
-                    _react2.default.createElement(_RaisedButton2.default, {
-                        id: 'studentMainDoAssignmentButton',
-                        label: 'Do Assignment',
-                        onClick: doAssignment })
-                ) });
+                    ' :',
+                    jsonOb.due_date
+                ),
+                secondaryTextLines: 2 });
         });
     },
     render: function render() {
-
         var styles = {
             headline: {
                 fontSize: 24,
@@ -70554,14 +70554,14 @@ var StudentMainPage = _react2.default.createClass({
                     { label: 'Due Assignments' },
                     _react2.default.createElement(_list_components2.default, {
                         default_empty_message: "You do not have any due assignments.",
-                        menu_items: [] })
+                        menu_items: this.getDueAssignmentsFromJson(this.state.dueAssignments) })
                 ),
                 _react2.default.createElement(
                     _Tabs.Tab,
                     { label: 'Completed Assignments' },
                     _react2.default.createElement(_list_components2.default, {
                         default_empty_message: "You do not have any completed assignments",
-                        menu_items: [] })
+                        menu_items: this.getCompletedAssignmentsFromJson(this.state.completedAssignments) })
                 )
             )
         );
@@ -70775,8 +70775,8 @@ var TutorMainPage = _react2.default.createClass({
             console.log(jsonOb);
             return _react2.default.createElement(_List.ListItem, {
                 style: styles.centerItem,
-                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
-                primaryText: jsonOb.name,
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.user__profile__avatar }),
+                primaryText: jsonOb.user__username,
                 secondaryText: _react2.default.createElement(
                     'p',
                     null,

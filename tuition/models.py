@@ -42,7 +42,7 @@ class Assignment(models.Model):
         return dumps(list(cls.objects.filter(id=assignment_id)
                           .values('name',
                                        'questions__content',
-                                       'questions__maximum_graded',
+                                       'questions__maximum_grade',
                                        'questions__answer__content',
                                        'questions__answer__grade',
                                        'questions__answer__comment',
