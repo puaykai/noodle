@@ -82,8 +82,9 @@ def get_assignment(request):
 
 @login_required
 def do_assignment(request):
-    if request.method == "POST" and "answers" in request.POST and "assignment_id" in request.POST:
-        answers = loads(request.POST.get("answers"))
+    if request.method == "POST" and request.body:
+        request.POST = loads(request.body)
+        answers = request.POST.get("answers")
         if Assignment.do_assignment(answers, request.user, request.POST.get("assignment_id")):
             return HttpResponse("SAVE_ASSIGNMENT_SUCCESS", status=200)
         else:

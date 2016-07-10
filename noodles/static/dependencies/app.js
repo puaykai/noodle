@@ -58,7 +58,8 @@ var App = React.createClass({
                         ]}/>,
             openSnackBar:false,
             message:"",
-            xhttp: new XMLHttpRequest()
+            xhttp: new XMLHttpRequest(),
+            canNavigate:function(){return true;}
         };
     },
     handleSnackOpen:function(){this.setState({openSnackBar:true})},
@@ -89,7 +90,9 @@ var App = React.createClass({
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
         this.state.xhttp.send(JSON.stringify(message));
     },
-    changePage: function(page_name){
+    preventDefault: function(navigate){this.setState({canNavigate:navigate});},
+    changePage: function(page_name, page_params){
+        if (this.state.canNavigate(page_name, page_params)){
         if (page_name == "tutor_main") {
             var t = this;
             this.setState({
@@ -201,10 +204,12 @@ var App = React.createClass({
                                             changePage={this.changePage}
                                             displaySnackMessage={this.displaySnackMessage}/>});
         } else if (page_name == "assignment") {
-            //TODO
             this.setState({"current_page":<Assignment
                                             sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
+                                            changePage={this.changePage}
+                                            displaySnackMessage={this.displaySnackMessage}
+                                            pageParams={page_params}
+                                            preventDefault={this.preventDefault}/>});
         } else if (page_name == "login") {
             this.setState({
             "current_page":<LoginPage
@@ -273,6 +278,7 @@ var App = React.createClass({
                                             sendInfo={this.sendInfo}
                                             changePage={this.changePage}
                                             displaySnackMessage={this.displaySnackMessage}/>});
+        }
         }
     },
     render: function(){

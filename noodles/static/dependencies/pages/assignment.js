@@ -17,18 +17,32 @@ var Assignment = React.createClass({
             questions:[],
             currentPageNum:0,
             currentPage:null,
-            openDialog:false
+            openDialog:false,
+            canNavigate:false,
+            nextNavigatePage:""
         };
     },
     handleOpenDialog:function(){
         this.setState({openDialog:true});
     },
     handleCloseDialogPositive:function(){
-        this.setState({openDialog:false});
-
+        this.setState({
+            openDialog:false,
+            canNavigate:true
+        });
+        this.props.changePage(this.state.nextNavigatePage);
+        //TODO send info to save server
     },
     handleCloseDialogNegative:function(){
         this.setState({openDialog:false});
+    },
+    handleBeforeNavigateAway:function(page_name, page_params){
+        this.handleOpenDialog();
+        this.setState({nextNavigatePage:page_name});
+        return this.state.canNavigate;
+    },
+    componentDidMount: function(){
+        this.props.preventDefault(this.handleBeforeNavigateAway);
     },
     componentWillMount: function(){
             console.log("ASSIGNMENT : " + this.props.pageParams);
@@ -208,25 +222,38 @@ var Assignment = React.createClass({
         console.log("trigger to go next page : " + this.state.currentPageNum);
     },
     componentWillUnmount: function(){
-        // TODO dialog for
         this.setState({
-            openDialog:true
+            openDialog:false
         });
-        for (var i=0; i<this.state.questions.length; i++) {
-            var question = this.state.questions[i];
-            if(question.isAnswered && question.isGraded) { //reviewing
-                //TODO this version we are not implementing reviewing
-            } else if(question.isAnswered) { // grading
-//                this.props.sendInfo(
-//                    "POST",
-//                    "",
-//                    {},
-//                    function(xhttp){},
-//                    function(xhttp){}
-//                );
-            } else { //answering
-            }
+        var a = {
+            "assignment_id":,
+            "answers":[]
         }
+//        for (var i=0; i<this.state.questions.length; i++) {
+//            var question = this.state.questions[i];
+//            if(question.isAnswered && question.isGraded) { //reviewing
+//                //TODO this version we are not implementing reviewing
+//            } else if(question.isAnswered) { // grading
+
+//            } else { //answering
+//            }
+//        }
+            var t = this;
+            this.props.sendInfo(
+                "POST",
+                "/tuition/do_assignment/",
+                a,
+                function(xhttp){},
+                function(xhttp){
+                    var msg = "";
+                    if (xhttp.responseText == "KEY_BAD_REQUEST"){
+                        msg = "You send a bad request"
+                    } else if (xhttp.responseText == "SAVE_ASSIGNMENT_FAILED") {
+                        msg = "You have failed to save assignment, please try again.";
+                    }
+                    t.props.displaySnackMessage(msg);
+                }
+            );
     },
     render: function(){
     const actions = [

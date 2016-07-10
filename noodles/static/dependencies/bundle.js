@@ -111,7 +111,10 @@ var App = _react2.default.createClass({
                     onClick: function onClick() {} })] }),
             openSnackBar: false,
             message: "",
-            xhttp: new XMLHttpRequest()
+            xhttp: new XMLHttpRequest(),
+            canNavigate: function canNavigate() {
+                return true;
+            }
         };
     },
     handleSnackOpen: function handleSnackOpen() {
@@ -148,148 +151,153 @@ var App = _react2.default.createClass({
         this.state.xhttp.setRequestHeader("X-CSRFToken", token);
         this.state.xhttp.send(JSON.stringify(message));
     },
+    preventDefault: function preventDefault(navigate) {
+        this.setState({ canNavigate: navigate });
+    },
     changePage: function changePage(page_name, page_params) {
-        console.log("page params : " + page_params);
-        if (page_name == "tutor_main") {
-            var t = this;
-            this.setState({
-                "current_page": _react2.default.createElement(_tutor_pages2.default, {
-                    changePage: this.changePage,
-                    sendInfo: this.sendInfo,
-                    displaySnackMessage: this.displaySnackMessage }),
-                "header": _react2.default.createElement(_header2.default, {
-                    changePage: this.changePage,
-                    sendInfo: this.sendInfo,
-                    menuItems: [_react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Main',
-                        onClick: function onClick() {
-                            t.changePage("tutor_main");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Profile',
-                        onClick: function onClick() {
-                            t.changePage("profile");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'New Assignment',
-                        onClick: function onClick() {
-                            t.changePage("new_assignment");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Ungraded Assignments',
-                        onClick: function onClick() {
-                            t.changePage("ungraded_assignment");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Requesting Student',
-                        onClick: function onClick() {
-                            t.changePage("requesting_students");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Sign out',
-                        onClick: function onClick() {
-                            t.sendInfo("POST", "/tuition/logout/", {}, function () {
-                                t.changePage("login");
-                                t.displaySnackMessage("Logout was successful");
-                            }, function () {
-                                t.displaySnackMessage("Logout was not successful");
-                            });
-                        } })] })
-            });
-        } else if (page_name == "student_main") {
-            var t = this;
-            this.setState({
-                "current_page": _react2.default.createElement(_student_pages2.default, {
-                    changePage: this.changePage,
-                    sendInfo: this.sendInfo,
-                    displaySnackMessage: this.displaySnackMessage }),
-                "header": _react2.default.createElement(_header2.default, {
-                    changePage: this.changePage,
-                    sendInfo: this.sendInfo,
-                    menuItems: [_react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Main',
-                        onClick: function onClick() {
-                            t.changePage("student_main");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Profile',
-                        onClick: function onClick() {
-                            t.changePage("profile");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'LeaderBoard',
-                        onClick: function onClick() {
-                            t.changePage("leaderboard");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Tutors',
-                        onClick: function onClick() {
-                            t.changePage("tutor_list");
-                        } }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Sign out',
-                        onClick: function onClick() {
-                            t.sendInfo("POST", "/tuition/logout/", {}, function () {
-                                t.changePage("login");
-                                t.displaySnackMessage("Logout was successful");
-                            }, function () {
-                                t.displaySnackMessage("Logout was not successful");
-                            });
-                        } })] })
-            });
-        } else if (page_name == "new_assignment") {
-            this.setState({ "current_page": _react2.default.createElement(_new_assignment2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    displaySnackMessage: this.displaySnackMessage }) });
-        } else if (page_name == "assignment") {
-            this.setState({ "current_page": _react2.default.createElement(_assignment2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    displaySnackMessage: this.displaySnackMessage,
-                    pageParams: page_params }) });
-        } else if (page_name == "login") {
-            this.setState({
-                "current_page": _react2.default.createElement(_login_sign_up2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    displaySnackMessage: this.displaySnackMessage }),
-                "header": _react2.default.createElement(_header2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    menuItems: [_react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'About Us',
-                        onClick: function onClick() {} }), _react2.default.createElement(_MenuItem2.default, {
-                        primaryText: 'Help',
-                        onClick: function onClick() {} })] }) });
-        } else if (page_name == "ungraded_assignment") {
-            var assignmentList = [];
-            var t = this;
-            this.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {}, function (xhttp) {
-                if (xhttp.responseText == "KEY_BAD_REQUEST") {
-                    t.displaySnackMessage("The request is bad");
-                }
-            });
-            this.setState({ "current_page": _react2.default.createElement(_assignment_list2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
-        } else if (page_name == "leaderboard") {
-            this.setState({ "current_page": _react2.default.createElement(_leaderboard2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
-        } else if (page_name == "tutor_list") {
-            var tutorList = [];
-            var t = this;
-            this.sendInfo("GET", "/tuition/get_tutors/", {}, function (xhttp) {
-                tutorList = JSON.parse(xhttp.responseText);
-            }, function (xhttp) {
-                t.displaySnackMessage("Did not manage to get snack message");
-            });
-            this.setState({ "current_page": _react2.default.createElement(_tutor_list2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    displaySnackMessage: this.displaySnackMessage,
-                    tutorList: tutorList }) });
-        } else if (page_name == "profile") {
-            this.setState({ "current_page": _react2.default.createElement(_profile2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage }) });
-        } else if (page_name == 'requesting_students') {
-            this.setState({ "current_page": _react2.default.createElement(_requesting_students2.default, {
-                    sendInfo: this.sendInfo,
-                    changePage: this.changePage,
-                    displaySnackMessage: this.displaySnackMessage }) });
+        if (this.state.canNavigate(page_name, page_params)) {
+            if (page_name == "tutor_main") {
+                var t = this;
+                this.setState({
+                    "current_page": _react2.default.createElement(_tutor_pages2.default, {
+                        changePage: this.changePage,
+                        sendInfo: this.sendInfo,
+                        displaySnackMessage: this.displaySnackMessage }),
+                    "header": _react2.default.createElement(_header2.default, {
+                        changePage: this.changePage,
+                        sendInfo: this.sendInfo,
+                        menuItems: [_react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Main',
+                            onClick: function onClick() {
+                                t.changePage("tutor_main");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Profile',
+                            onClick: function onClick() {
+                                t.changePage("profile");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'New Assignment',
+                            onClick: function onClick() {
+                                t.changePage("new_assignment");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Ungraded Assignments',
+                            onClick: function onClick() {
+                                t.changePage("ungraded_assignment");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Requesting Student',
+                            onClick: function onClick() {
+                                t.changePage("requesting_students");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Sign out',
+                            onClick: function onClick() {
+                                t.sendInfo("POST", "/tuition/logout/", {}, function () {
+                                    t.changePage("login");
+                                    t.displaySnackMessage("Logout was successful");
+                                }, function () {
+                                    t.displaySnackMessage("Logout was not successful");
+                                });
+                            } })] })
+                });
+            } else if (page_name == "student_main") {
+                var t = this;
+                this.setState({
+                    "current_page": _react2.default.createElement(_student_pages2.default, {
+                        changePage: this.changePage,
+                        sendInfo: this.sendInfo,
+                        displaySnackMessage: this.displaySnackMessage }),
+                    "header": _react2.default.createElement(_header2.default, {
+                        changePage: this.changePage,
+                        sendInfo: this.sendInfo,
+                        menuItems: [_react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Main',
+                            onClick: function onClick() {
+                                t.changePage("student_main");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Profile',
+                            onClick: function onClick() {
+                                t.changePage("profile");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'LeaderBoard',
+                            onClick: function onClick() {
+                                t.changePage("leaderboard");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Tutors',
+                            onClick: function onClick() {
+                                t.changePage("tutor_list");
+                            } }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Sign out',
+                            onClick: function onClick() {
+                                t.sendInfo("POST", "/tuition/logout/", {}, function () {
+                                    t.changePage("login");
+                                    t.displaySnackMessage("Logout was successful");
+                                }, function () {
+                                    t.displaySnackMessage("Logout was not successful");
+                                });
+                            } })] })
+                });
+            } else if (page_name == "new_assignment") {
+                this.setState({ "current_page": _react2.default.createElement(_new_assignment2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage }) });
+            } else if (page_name == "assignment") {
+                this.setState({ "current_page": _react2.default.createElement(_assignment2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage,
+                        pageParams: page_params,
+                        preventDefault: this.preventDefault }) });
+            } else if (page_name == "login") {
+                this.setState({
+                    "current_page": _react2.default.createElement(_login_sign_up2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage }),
+                    "header": _react2.default.createElement(_header2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        menuItems: [_react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'About Us',
+                            onClick: function onClick() {} }), _react2.default.createElement(_MenuItem2.default, {
+                            primaryText: 'Help',
+                            onClick: function onClick() {} })] }) });
+            } else if (page_name == "ungraded_assignment") {
+                var assignmentList = [];
+                var t = this;
+                this.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {}, function (xhttp) {
+                    if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                        t.displaySnackMessage("The request is bad");
+                    }
+                });
+                this.setState({ "current_page": _react2.default.createElement(_assignment_list2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage }) });
+            } else if (page_name == "leaderboard") {
+                this.setState({ "current_page": _react2.default.createElement(_leaderboard2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage }) });
+            } else if (page_name == "tutor_list") {
+                var tutorList = [];
+                var t = this;
+                this.sendInfo("GET", "/tuition/get_tutors/", {}, function (xhttp) {
+                    tutorList = JSON.parse(xhttp.responseText);
+                }, function (xhttp) {
+                    t.displaySnackMessage("Did not manage to get snack message");
+                });
+                this.setState({ "current_page": _react2.default.createElement(_tutor_list2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage,
+                        tutorList: tutorList }) });
+            } else if (page_name == "profile") {
+                this.setState({ "current_page": _react2.default.createElement(_profile2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage }) });
+            } else if (page_name == 'requesting_students') {
+                this.setState({ "current_page": _react2.default.createElement(_requesting_students2.default, {
+                        sendInfo: this.sendInfo,
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage }) });
+            }
         }
     },
     render: function render() {
@@ -69242,17 +69250,34 @@ var Assignment = _react2.default.createClass({
             questions: [],
             currentPageNum: 0,
             currentPage: null,
-            openDialog: false
+            openDialog: false,
+            canNavigate: false,
+            nextNavigatePage: ""
         };
     },
     handleOpenDialog: function handleOpenDialog() {
         this.setState({ openDialog: true });
     },
     handleCloseDialogPositive: function handleCloseDialogPositive() {
-        this.setState({ openDialog: false });
+        this.setState({
+            openDialog: false
+        });
+        this.setState({ canNavigate: true });
+        this.props.changePage(this.state.nextNavigatePage);
+        console.log("HERE2*********************** " + this.state.nextNavigatePage);
+        //TODO send info to save server
     },
     handleCloseDialogNegative: function handleCloseDialogNegative() {
         this.setState({ openDialog: false });
+        console.log("HERE3***********************");
+    },
+    handleBeforeNavigateAway: function handleBeforeNavigateAway(page_name, page_params) {
+        this.handleOpenDialog();
+        this.setState({ nextNavigatePage: page_name });
+        return this.state.canNavigate;
+    },
+    componentDidMount: function componentDidMount() {
+        this.props.preventDefault(this.handleBeforeNavigateAway);
     },
     componentWillMount: function componentWillMount() {
         console.log("ASSIGNMENT : " + this.props.pageParams);
@@ -69495,34 +69520,24 @@ var Assignment = _react2.default.createClass({
     },
     componentWillUnmount: function componentWillUnmount() {
         // TODO dialog for
-        this.setState({
-            openDialog: true
-        });
-        for (var i = 0; i < this.state.questions.length; i++) {
-            var question = this.state.questions[i];
-            if (question.isAnswered && question.isGraded) {//reviewing
-                //TODO this version we are not implementing reviewing
-            } else if (question.isAnswered) {// grading
-                    //                this.props.sendInfo(
-                    //                    "POST",
-                    //                    "",
-                    //                    {},
-                    //                    function(xhttp){},
-                    //                    function(xhttp){}
-                    //                );
-                } else {//answering
-                    }
-        }
-        window.onbeforeunload = function () {
-            console.log("running beforeunload");
-            var prevent = false;
-            events.emit("will-leave", {
-                preventDefault: function preventDefault(reason) {
-                    prevent = reason;
-                }
-            });
-            if (prevent) return prevent;
-        };
+        //        this.setState({
+        //            openDialog:true
+        //        });
+        //        for (var i=0; i<this.state.questions.length; i++) {
+        //            var question = this.state.questions[i];
+        //            if(question.isAnswered && question.isGraded) { //reviewing
+        //                //TODO this version we are not implementing reviewing
+        //            } else if(question.isAnswered) { // grading
+        //                this.props.sendInfo(
+        //                    "POST",
+        //                    "",
+        //                    {},
+        //                    function(xhttp){},
+        //                    function(xhttp){}
+        //                );
+        //            } else { //answering
+        //            }
+        //        }
     },
     render: function render() {
         var actions = [_react2.default.createElement(_FlatButton2.default, {
@@ -69545,7 +69560,7 @@ var Assignment = _react2.default.createClass({
                 _react2.default.createElement(
                     _Dialog2.default,
                     {
-                        title: 'Dialog With Actions',
+                        title: 'Confirm Navigate Away?',
                         actions: actions,
                         modal: true,
                         open: this.state.openDialog,
