@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from models import Tutor, Student, Assignment, Question
+from models import Tutor, Student, Assignment, Question, StudentAssignment
 from json import loads, dumps
 
 
@@ -30,7 +30,7 @@ def signup_login(request):
                 user.save()
             except:
                 return HttpResponse("KEY_CREATE_USER_FAILED", status=400)
-            if request.POST.get('is_tutor') == '0':
+            if request.POST.get('is_tutor') == 0:
                 try:
                     tutor = Tutor(user=user)
                     tutor.save()
@@ -232,8 +232,9 @@ def accept_student(request):
         if student.requested_tutors.filter(id=tutor.id).exists():
             student.requested_tutors.remove(tutor)
             tutor.accepted_students.add(student)
-            # student.assignments.add(*tutor.assignments.all())
             student.save()  # TODO is this necessary?
+            for assignment in tutor.assignments.all():
+                StudentAssignment(student=student, assignment=assignment).save()
             return HttpResponse('KEY_ACCEPT_STUDENT_SUCCESS', status=200)
         else:
             return HttpResponse('KEY_STUDENT_DID_NOT_REQUEST_FOR_TUTOR', status=400)

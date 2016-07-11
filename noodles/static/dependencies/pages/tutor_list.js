@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Avatar from 'material-ui/Avatar';
-import ListItem from 'material-ui/List';
+import {ListItem, List} from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
@@ -9,7 +9,9 @@ import GenericList from './list_components';
 
 var TutorList = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            tutor_list:[]
+        };
     },
     getTutorListFromJson: function(jsonList){
         return (jsonList.map(function(jsonOb){
@@ -19,6 +21,19 @@ var TutorList = React.createClass({
                     primaryText={jsonOb.name}/>
             );
         }));
+    },
+    fetchTutorList: function(){
+        this.sendInfo(
+            "GET",
+            "/tuition/get_tutors/",
+            {},
+            function(xhttp){
+                console.log("fetch tutor list i");
+            },
+            function(xhttp){
+
+            }
+        );
     },
     render: function(){
     const style = {
@@ -78,9 +93,7 @@ var TutorList = React.createClass({
             <div style={style}>
             <GenericList
                 menu_items={
-                this.getTutorListFromJson([
-                {source:"", name:"Maurice Chng"}
-                ])
+                this.getTutorListFromJson(this.state.tutor_list)
                 }/>
                 </div>
             </div>

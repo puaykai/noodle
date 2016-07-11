@@ -261,16 +261,10 @@ var App = _react2.default.createClass({
                             primaryText: 'Help',
                             onClick: function onClick() {} })] }) });
             } else if (page_name == "ungraded_assignment") {
-                var assignmentList = [];
-                var t = this;
-                this.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {}, function (xhttp) {
-                    if (xhttp.responseText == "KEY_BAD_REQUEST") {
-                        t.displaySnackMessage("The request is bad");
-                    }
-                });
                 this.setState({ "current_page": _react2.default.createElement(_assignment_list2.default, {
                         sendInfo: this.sendInfo,
-                        changePage: this.changePage }) });
+                        changePage: this.changePage,
+                        displaySnackMessage: this.displaySnackMessage }) });
             } else if (page_name == "leaderboard") {
                 this.setState({ "current_page": _react2.default.createElement(_leaderboard2.default, {
                         sendInfo: this.sendInfo,
@@ -69260,16 +69254,48 @@ var Assignment = _react2.default.createClass({
     },
     handleCloseDialogPositive: function handleCloseDialogPositive() {
         this.setState({
-            openDialog: false
+            openDialog: false,
+            canNavigate: true
         });
-        this.setState({ canNavigate: true });
+
+        var a = {
+            "assignment_id": this.props.pageParams,
+            "answers": []
+        };
+        for (var i = 0; i < this.state.questions.length; i++) {
+            var question = this.state.questions[i];
+            if (question.isAnswered && question.isGraded) {//reviewing
+                //TODO this version we are not implementing reviewing
+            } else if (question.isAnswered) {// grading
+                    //TODO implement grading
+                } else {
+                        //answering, need to return dictionary of question id and answer
+                        a.answers.push({
+                            "question_id": question.id,
+                            "answer": question.answer
+                        });
+                        console.log("question_id : " + question.id + "\r\n answer: " + question.answer);
+                    }
+        }
+        console.log("a : " + a.answers);
+        var t = this;
+        this.props.sendInfo("POST", "/tuition/do_assignment/", a, function (xhttp) {
+            console.log("do assignment return : " + xhttp.responseText);
+            t.props.displaySnackMessage("You have successfully completed that assignment!");
+        }, function (xhttp) {
+            var msg = "";
+            if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                msg = "You send a bad request";
+            } else if (xhttp.responseText == "SAVE_ASSIGNMENT_FAILED") {
+                msg = "You have failed to save assignment, please try again.";
+            }
+            t.props.displaySnackMessage(msg);
+        });
         this.props.changePage(this.state.nextNavigatePage);
-        console.log("HERE2*********************** " + this.state.nextNavigatePage);
         //TODO send info to save server
     },
     handleCloseDialogNegative: function handleCloseDialogNegative() {
         this.setState({ openDialog: false });
-        console.log("HERE3***********************");
     },
     handleBeforeNavigateAway: function handleBeforeNavigateAway(page_name, page_params) {
         this.handleOpenDialog();
@@ -69291,6 +69317,7 @@ var Assignment = _react2.default.createClass({
             for (var i = 0; i < r.length; i++) {
                 var a = {};
                 console.log(a);
+                a['id'] = r[i]['questions__id'];
                 a['question'] = r[i]['questions__content'];
                 a['maxScore'] = r[i]['questions__maximum_grade'];
                 console.log("question : " + q['question'] + " maxScore : " + q['maxScore']);
@@ -69518,27 +69545,7 @@ var Assignment = _react2.default.createClass({
         });
         console.log("trigger to go next page : " + this.state.currentPageNum);
     },
-    componentWillUnmount: function componentWillUnmount() {
-        // TODO dialog for
-        //        this.setState({
-        //            openDialog:true
-        //        });
-        //        for (var i=0; i<this.state.questions.length; i++) {
-        //            var question = this.state.questions[i];
-        //            if(question.isAnswered && question.isGraded) { //reviewing
-        //                //TODO this version we are not implementing reviewing
-        //            } else if(question.isAnswered) { // grading
-        //                this.props.sendInfo(
-        //                    "POST",
-        //                    "",
-        //                    {},
-        //                    function(xhttp){},
-        //                    function(xhttp){}
-        //                );
-        //            } else { //answering
-        //            }
-        //        }
-    },
+    componentWillUnmount: function componentWillUnmount() {},
     render: function render() {
         var actions = [_react2.default.createElement(_FlatButton2.default, {
             label: 'Cancel',
@@ -69593,8 +69600,6 @@ var _reactDom2 = _interopRequireDefault(_reactDom);
 
 var _List = require('material-ui/List');
 
-var _List2 = _interopRequireDefault(_List);
-
 var _TextField = require('material-ui/TextField');
 
 var _TextField2 = _interopRequireDefault(_TextField);
@@ -69623,6 +69628,17 @@ var AssignmentsList = _react2.default.createClass({
     getInitialState: function getInitialState() {
         return {};
     },
+    componentWillMount: function componentWillMount() {
+        var assignmentList = [];
+        var t = this;
+        this.props.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {
+            console.log("repsonseText : " + xhttp.responseText);
+        }, function (xhttp) {
+            if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                t.props.displaySnackMessage("The request is bad");
+            }
+        });
+    },
     getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
         var t = this;
         var grade_assignment = function grade_assignment() {
@@ -69634,7 +69650,7 @@ var AssignmentsList = _react2.default.createClass({
             this.props.changePage("assignment");
         };
         return jsonList.map(function (jsonOb) {
-            return _react2.default.createElement(_List2.default, {
+            return _react2.default.createElement(_List.ListItem, {
                 leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
                 primaryText: jsonOb.studentName,
                 secondaryText: _react2.default.createElement(
@@ -70022,6 +70038,7 @@ var LoginPage = _react2.default.createClass({
     },
     changeRadioButton: function changeRadioButton(event, string) {
         this.setState({ persona: string });
+        console.log("signup login radio button : " + string);
     },
     submitForm: function submitForm() {
         var username = document.getElementById("user_input").value;
@@ -70058,17 +70075,17 @@ var LoginPage = _react2.default.createClass({
             t.props.changePage(flag);
         }, function (xhttp) {
             var msg = "";
-            if (xhttp.responseContent == "KEY_USER_ACCOUNT_DISABLED") {
+            if (xhttp.responseText == "KEY_USER_ACCOUNT_DISABLED") {
                 msg = "Your account has been disabled";
-            } else if (xhttp.responseContent == "KEY_INVALID_LOGIN") {
+            } else if (xhttp.responseText == "KEY_INVALID_LOGIN") {
                 msg = "We are unable to log you in. Wrong username or password.";
-            } else if (xhttp.responseContent == "KEY_CREATE_USER_FAILED") {
+            } else if (xhttp.responseText == "KEY_CREATE_USER_FAILED") {
                 msg = "We cannot sign you up";
-            } else if (xhttp.responseContent == "KEY_CREATE_TUTOR_FAILED") {
+            } else if (xhttp.responseText == "KEY_CREATE_TUTOR_FAILED") {
                 msg = "We cannot sign you up as a tutor";
-            } else if (xhttp.responseContent == "KEY_CREATE_STUDENT_FAILED") {
+            } else if (xhttp.responseText == "KEY_CREATE_STUDENT_FAILED") {
                 msg = "We cannot sign you up as a student";
-            } else if (xhttp.responseContent == "KEY_BAD_REQUEST") {
+            } else if (xhttp.responseText == "KEY_BAD_REQUEST") {
                 msg = "You sent a bad request";
             }
             document.getElementById("loginSignUpSubmitButton").style.display = 'block';
@@ -70657,17 +70674,6 @@ var StudentMainPage = _react2.default.createClass({
         return jsonList.map(function (jsonOb) {
             var doAssignment = function doAssignment() {
                 console.log("DUE ASSIGNMENT ID : " + jsonOb.id);
-                //                t.props.sendInfo(
-                //                    "POST",
-                //                    "/tuition/get_assignment/",
-                //                    {"assignment_id":jsonOb.id},
-                //                    function(xhttp){
-                //                        console.log("response good: " + xhttp.responseText);
-                //                    },
-                //                    function(xhttp){
-                //                        console.log("response bad : " + xhttp.responseText);
-                //                    }
-                //                );
                 t.props.changePage("assignment", jsonOb.id);
             };
             return _react2.default.createElement(_List.ListItem, {
@@ -70718,14 +70724,14 @@ var StudentMainPage = _react2.default.createClass({
                     _Tabs.Tab,
                     { label: 'Due Assignments' },
                     _react2.default.createElement(_list_components2.default, {
-                        default_empty_message: "You do not have any due assignments.",
+                        default_empty_message: "You do not have any due assignments to do.",
                         menu_items: this.getDueAssignmentsFromJson(this.state.dueAssignments) })
                 ),
                 _react2.default.createElement(
                     _Tabs.Tab,
-                    { label: 'Completed Assignments' },
+                    { label: 'Marked Assignments' },
                     _react2.default.createElement(_list_components2.default, {
-                        default_empty_message: "You do not have any completed assignments",
+                        default_empty_message: "You do not have any marked assignments to review.",
                         menu_items: this.getCompletedAssignmentsFromJson(this.state.completedAssignments) })
                 )
             )

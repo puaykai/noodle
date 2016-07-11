@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ListItem from 'material-ui/List';
+import {List, ListItem} from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import GenericList from './list_components';
 import Assignment from './assignment';
@@ -11,6 +11,23 @@ import RaisedButton from 'material-ui/RaisedButton';
 var AssignmentsList = React.createClass({
     getInitialState: function(){
         return {};
+    },
+    componentWillMount:function(){
+        var assignmentList = [];
+        var t = this;
+        this.props.sendInfo(
+            "GET",
+            "/tuition/get_ungraded_assignment/",
+            {},
+            function(xhttp){
+                console.log("repsonseText : " + xhttp.responseText);
+            },
+            function(xhttp){
+                if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                    t.props.displaySnackMessage("The request is bad");
+                }
+            }
+        );
     },
     getAssignmentListFromJson:function(jsonList){
         var t = this;

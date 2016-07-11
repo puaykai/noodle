@@ -228,24 +228,10 @@ var App = React.createClass({
                                 onClick={function(){}}/>
                         ]}/>});
         } else if (page_name == "ungraded_assignment") {
-            var assignmentList = [];
-            var t = this;
-            this.sendInfo(
-                "GET",
-                "/tuition/get_ungraded_assignment/",
-                {},
-                function(xhttp){
-
-                },
-                function(xhttp){
-                    if (xhttp.responseText == "KEY_BAD_REQUEST") {
-                        t.displaySnackMessage("The request is bad");
-                    }
-                }
-            );
             this.setState({"current_page":<AssignmentsList
                                             sendInfo={this.sendInfo}
-                                            changePage={this.changePage}/>});
+                                            changePage={this.changePage}
+                                            displaySnackMessage={this.displaySnackMessage}/>});
         } else if (page_name == "leaderboard") {
             this.setState({"current_page":<LeaderBoard
                                             sendInfo={this.sendInfo}

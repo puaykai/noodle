@@ -81,6 +81,7 @@ var NewAssignmentPage = React.createClass({
                 t.props.displaySnackMessage("Your assignment has been saved!");
                 document.getElementById("new_assignment_save_button_id").style.display="block";
                 document.getElementById("new_assignment_progress_circle_id").style.display="none";
+                t.props.changePage("tutor_main");
             },
             function(xhttp){
                 var msg = "";

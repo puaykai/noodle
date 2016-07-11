@@ -30,6 +30,45 @@ var Assignment = React.createClass({
             openDialog:false,
             canNavigate:true
         });
+
+        var a = {
+            "assignment_id":this.props.pageParams,
+            "answers":[]
+        }
+        for (var i=0; i<this.state.questions.length; i++) {
+            var question = this.state.questions[i];
+            if(question.isAnswered && question.isGraded) { //reviewing
+                //TODO this version we are not implementing reviewing
+            } else if(question.isAnswered) { // grading
+                //TODO implement grading
+            } else { //answering, need to return dictionary of question id and answer
+                a.answers.push({
+                    "question_id":question.id,
+                    "answer":question.answer
+                });
+                console.log("question_id : " + question.id + "\r\n answer: " + question.answer );
+            }
+        }
+        console.log("a : " + a.answers);
+            var t = this;
+            this.props.sendInfo(
+                "POST",
+                "/tuition/do_assignment/",
+                a,
+                function(xhttp){
+                    console.log("do assignment return : " + xhttp.responseText);
+                    t.props.displaySnackMessage("You have successfully completed that assignment!");
+                },
+                function(xhttp){
+                    var msg = "";
+                    if (xhttp.responseText == "KEY_BAD_REQUEST"){
+                        msg = "You send a bad request"
+                    } else if (xhttp.responseText == "SAVE_ASSIGNMENT_FAILED") {
+                        msg = "You have failed to save assignment, please try again.";
+                    }
+                    t.props.displaySnackMessage(msg);
+                }
+            );
         this.props.changePage(this.state.nextNavigatePage);
         //TODO send info to save server
     },
@@ -60,6 +99,7 @@ var Assignment = React.createClass({
                     for (var i=0; i<r.length; i++) {
                         var a = {};
                         console.log(a);
+                        a['id'] = r[i]['questions__id'];
                         a['question'] = r[i]['questions__content'];
                         a['maxScore'] = r[i]['questions__maximum_grade'];
                         console.log("question : " + q['question'] + " maxScore : " + q['maxScore']);
@@ -222,38 +262,6 @@ var Assignment = React.createClass({
         console.log("trigger to go next page : " + this.state.currentPageNum);
     },
     componentWillUnmount: function(){
-        this.setState({
-            openDialog:false
-        });
-        var a = {
-            "assignment_id":,
-            "answers":[]
-        }
-//        for (var i=0; i<this.state.questions.length; i++) {
-//            var question = this.state.questions[i];
-//            if(question.isAnswered && question.isGraded) { //reviewing
-//                //TODO this version we are not implementing reviewing
-//            } else if(question.isAnswered) { // grading
-
-//            } else { //answering
-//            }
-//        }
-            var t = this;
-            this.props.sendInfo(
-                "POST",
-                "/tuition/do_assignment/",
-                a,
-                function(xhttp){},
-                function(xhttp){
-                    var msg = "";
-                    if (xhttp.responseText == "KEY_BAD_REQUEST"){
-                        msg = "You send a bad request"
-                    } else if (xhttp.responseText == "SAVE_ASSIGNMENT_FAILED") {
-                        msg = "You have failed to save assignment, please try again.";
-                    }
-                    t.props.displaySnackMessage(msg);
-                }
-            );
     },
     render: function(){
     const actions = [

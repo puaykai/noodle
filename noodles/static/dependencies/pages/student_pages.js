@@ -100,17 +100,6 @@ var StudentMainPage = React.createClass({
         return (jsonList.map(function(jsonOb){
             var doAssignment = function(){
                 console.log("DUE ASSIGNMENT ID : " + jsonOb.id);
-//                t.props.sendInfo(
-//                    "POST",
-//                    "/tuition/get_assignment/",
-//                    {"assignment_id":jsonOb.id},
-//                    function(xhttp){
-//                        console.log("response good: " + xhttp.responseText);
-//                    },
-//                    function(xhttp){
-//                        console.log("response bad : " + xhttp.responseText);
-//                    }
-//                );
                 t.props.changePage("assignment", jsonOb.id);
             };
             return (
@@ -153,12 +142,12 @@ var StudentMainPage = React.createClass({
   <Tabs>
     <Tab label="Due Assignments" >
         <GenericList
-            default_empty_message={"You do not have any due assignments."}
+            default_empty_message={"You do not have any due assignments to do."}
             menu_items={this.getDueAssignmentsFromJson(this.state.dueAssignments)}/>
     </Tab>
-    <Tab label="Completed Assignments" >
+    <Tab label="Marked Assignments" >
         <GenericList
-            default_empty_message={"You do not have any completed assignments"}
+            default_empty_message={"You do not have any marked assignments to review."}
             menu_items={this.getCompletedAssignmentsFromJson(this.state.completedAssignments)}/>
     </Tab>
   </Tabs>
