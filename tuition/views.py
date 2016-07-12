@@ -105,9 +105,27 @@ def get_ungraded_assignments(request):
 
 @login_required
 def grade_assignment(request):
-    if request.method == "POST" and "questions" in request.POST and "assignment_id" in request.POST:
-        questions = loads(request.POST.get("questions"))
-        Assignment.grade(questions, request.user, request.POST.get("assignment_id"))
+    if request.method == "POST" and request.body:
+        try:
+            tutor = Tutor.objects.get(user=request.user)
+        except:
+            return HttpResponse("KEY_YOU_ARE_NOT_TUTOR", status=400)
+        request.POST = loads(request.body)
+        if "questions" in request.POST and "assignment_id" in request.POST and "student_id" in request.POST:
+            try:
+                assignment = Assignment.objects.get(id=request.POST.get("assignment_id"))
+            except:
+                return HttpResponse("KEY_NO_SUCH_ASSIGNMENT", status=400)
+            try:
+                student = Student.objects.get(id=request.POST.get("student_id"))
+            except:
+                return HttpResponse("KEY_NO_SUCH_STUDENT", status=400)
+            if StudentAssignment.objects.filter(student=student, assignment=assignment).exists():
+                return HttpResponse(Assignment.grade(tutor, assignment, student, request.POST.get('questions')), status=200)
+            else:
+                return HttpResponse("KEY_STUDENT_DOES_NOT_HAVE_ASSIGNMENT", status=400)
+        else:
+            return HttpResponse("KEY_MISSING_PARAMS", status=400)
     else:
         return HttpResponse("KEY_BAD_REQUEST", status=400)
 

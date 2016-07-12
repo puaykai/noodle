@@ -80,8 +80,9 @@ class Assignment(models.Model):
 
     @classmethod
     def get_ungraded_assignment(cls, tutor):
-        return dumps(list(cls.objects.filter(tutorassignment__tutor=tutor, tutorassignment__state='RE')
-                          .values('id', 'name', 'due_date')), cls=MyEncoder)
+        return dumps(list(StudentAssignment.objects.filter(student__in=tutor.accepted_students.all(), state='DO')
+                          .values('student__id', 'student__user__username', 'student__user__profile__avatar',
+                                  'assignment__id', 'assignment__name')))
 
     @classmethod
     def get_graded_assignment(cls, user):
@@ -116,15 +117,7 @@ class Assignment(models.Model):
         return True
 
     @classmethod
-    def grade(cls, questions_dictionary, user, assignment_id):
-        try:
-            tutor = Tutor.object.get(user=user)
-        except:
-            return False
-        try:
-            assignment = Assignment.objects.get(id=assignment_id)
-        except:
-            return False
+    def grade(cls, tutor, assignment, student, questions_dictionary):
         for question_dictionary in questions_dictionary:# {question_id, grade, comment}
             question = assignment.question.get(id=question_dictionary.get("question_id"))
             answers = Answer.objects.filter(question=question, graded=False)

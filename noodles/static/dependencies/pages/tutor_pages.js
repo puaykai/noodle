@@ -82,7 +82,7 @@ var TutorMainPage = React.createClass({
         return (jsonList.map(function(jsonOb){
             return (
                 <ListItem
-                    primaryText={jsonOb.name}
+                    primaryText={jsonOb.assignment__name}
                     secondaryText={
                         <p>
                             <span>Due Date</span> :
@@ -121,9 +121,6 @@ var TutorMainPage = React.createClass({
                 default_empty_message={"You have not created any assignments yet."}
                 menu_items={
                 this.getAssignmentListFromJson(
-//                [
-//                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
-//                ]
                 this.state.assignmentList
                 )
                 }
@@ -134,9 +131,6 @@ var TutorMainPage = React.createClass({
             default_empty_message={"You do have any students yet."}
             menu_items={
             this.getStudentListFromJson(
-//            [
-//            {source:"", name:"Brendan Lim", totalScore:"10"}
-//            ]
             this.state.studentList
             )
             }/>

@@ -30,26 +30,63 @@ var Assignment = React.createClass({
             openDialog:false,
             canNavigate:true
         });
-
         var a = {
-            "assignment_id":this.props.pageParams,
+            "assignment_id":this.props.pageParams.assignment_id,
             "answers":[]
+        };
+        if (props.pageParams.student_id != null) {
+            a['student_id'] = this.props.pageParams.student_id;
         }
-        for (var i=0; i<this.state.questions.length; i++) {
-            var question = this.state.questions[i];
-            if(question.isAnswered && question.isGraded) { //reviewing
-                //TODO this version we are not implementing reviewing
-            } else if(question.isAnswered) { // grading
-                //TODO implement grading
-            } else { //answering, need to return dictionary of question id and answer
+        var sample_question = this.state.questions[0];
+        if(sample_question.isAnswered && sample_question.isGraded) { // TODO not implemented in this version
+
+        } else if(sample_question.isAnswered) { //grading question
+            for(var i=0; i<this.state.questions.length; i++) {
+                var question = this.state.questions[i];
+                a.answers.push({
+                    "question_id":question.id,
+                    "grade":question.grade,
+                    "comment":question.comment
+                });
+                console.log("question_id : " + question.id + "\r\n grade: " + question.grade + " \r\n comment: " + question.comment);
+            }
+            var t = this;
+            this.props.sendInfo(
+                "POST",
+                "/tuition/grade_assignment",
+                a,
+                function(xhttp){
+                    console.log("grade assignment return : " + xhttp.responseText);
+                    t.props.displaySnackMessage("You have successfully graded that assignment");
+                },
+                function(xhttp){
+                    var msg = "";
+                    if (xhttp.responseText == "KEY_YOU_ARE_NOT_TUTOR") {
+                        msg = "Please refresh and login again";
+                    } else if (xhttp.responseText == "KEY_NO_SUCH_ASSIGNMENT") {
+                        msg = "There is no such assignment, please go to main page and try again";
+                    } else if (xhttp.responseText == "KEY_NO_SUCH_STUDENT") {
+                        msg = "The student has been deleted";
+                    } else if (xhttp.responseText == "KEY_STUDENT_DOES_NOT_HAVE_ASSIGNMENT") {
+                        msg = "This student does not have this assignment"
+                    } else if (xhttp.responseText == "KEY_MISSING_PARAMS") {
+                        msg = "Some parameters are missing"; //TODO bad message
+                    } else if (xhttp.responseText == "KEY_BAD_REQUEST") {
+                        msg = "You have sent a bad request";
+                    }
+                    t.props.displaySnackMessage(msg);
+                }
+            );
+        } else { // doing question
+            for (var i=0; i<this.state.questions.length; i++) {
+                var question = this.state.questions[i];
                 a.answers.push({
                     "question_id":question.id,
                     "answer":question.answer
                 });
                 console.log("question_id : " + question.id + "\r\n answer: " + question.answer );
             }
-        }
-        console.log("a : " + a.answers);
+            console.log("a : " + a.answers);
             var t = this;
             this.props.sendInfo(
                 "POST",
@@ -69,8 +106,8 @@ var Assignment = React.createClass({
                     t.props.displaySnackMessage(msg);
                 }
             );
+        }
         this.props.changePage(this.state.nextNavigatePage);
-        //TODO send info to save server
     },
     handleCloseDialogNegative:function(){
         this.setState({openDialog:false});
@@ -84,12 +121,12 @@ var Assignment = React.createClass({
         this.props.preventDefault(this.handleBeforeNavigateAway);
     },
     componentWillMount: function(){
-            console.log("ASSIGNMENT : " + this.props.pageParams);
+            console.log("ASSIGNMENT : " + this.props.pageParams.assignment_id);
             var t = this;
             this.props.sendInfo(
                 "POST",
                 "/tuition/get_assignment/",
-                {"assignment_id":this.props.pageParams},
+                {"assignment_id":this.props.pageParams.assignment_id},
                 function(xhttp){
                     console.log("ASSIGNMENT response good: " + xhttp.responseText);
                     var q = [];
@@ -183,7 +220,7 @@ var Assignment = React.createClass({
 
                         <div id={content_id} ref={
                             function(input){
-                                if(input != null) {
+                                if(input != null) { //TODO put grade and comment on this question
                                     AlloyEditor.editable(input.id, {
                                         container: 'editable'
                                     });
@@ -251,6 +288,8 @@ var Assignment = React.createClass({
     },
     goToNextPage: function(){
         console.log("triggered go to next page");
+        // TODO if tutor , then save grades and comments
+        // TODO if student , then save answer
         //Save the answer and set new answer
         this.state.questions[this.state.currentPageNum].answer = document.getElementById("editableContent-"+this.state.currentPageNum).innerHTML;
         var nextPageNumber = (this.state.currentPageNum + 1) % this.state.questions.length;

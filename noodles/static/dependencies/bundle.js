@@ -69626,13 +69626,27 @@ var AssignmentsList = _react2.default.createClass({
     displayName: 'AssignmentsList',
 
     getInitialState: function getInitialState() {
-        return {};
+        return {
+            ungraded_assignment: []
+        };
     },
     componentWillMount: function componentWillMount() {
         var assignmentList = [];
         var t = this;
         this.props.sendInfo("GET", "/tuition/get_ungraded_assignment/", {}, function (xhttp) {
             console.log("repsonseText : " + xhttp.responseText);
+            var ungraded_assignment = [];
+            var a = JSON.parse(xhttp.responseText);
+            for (var i = 0; i < a.length; i++) {
+                var b = {};
+                b['assignment_id'] = a[i].assignment__id;
+                b['assignment_name'] = a[i].assignment__name;
+                b['student_id'] = a[i].student__id;
+                b['student_name'] = a[i].student__user__username;
+                b['avatar'] = a[i].student__user__profile__avatar;
+                ungraded_assignment.push(b);
+            }
+            t.setState({ 'ungraded_assignment': ungraded_assignment });
         }, function (xhttp) {
             if (xhttp.responseText == "KEY_BAD_REQUEST") {
                 t.props.displaySnackMessage("The request is bad");
@@ -69651,8 +69665,8 @@ var AssignmentsList = _react2.default.createClass({
         };
         return jsonList.map(function (jsonOb) {
             return _react2.default.createElement(_List.ListItem, {
-                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
-                primaryText: jsonOb.studentName,
+                leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.avatar }),
+                primaryText: jsonOb.student_name,
                 secondaryText: _react2.default.createElement(
                     'div',
                     null,
@@ -69662,15 +69676,8 @@ var AssignmentsList = _react2.default.createClass({
                         _react2.default.createElement(
                             'span',
                             null,
-                            jsonOb.assignmentName
+                            jsonOb.assignment_name
                         )
-                    ),
-                    _react2.default.createElement(
-                        'div',
-                        null,
-                        _react2.default.createElement(_RaisedButton2.default, {
-                            label: 'Grade',
-                            onClick: grade_assignment })
                     )
                 ),
                 secondaryTextLines: 2 });
@@ -69713,7 +69720,11 @@ var AssignmentsList = _react2.default.createClass({
                 { style: styles.centerList },
                 _react2.default.createElement(_list_components2.default, {
                     default_empty_message: 'You have no assignments',
-                    menu_items: this.getAssignmentListFromJson([{ source: "", studentName: "Poh Puay Kai", assignmentName: "Algebra" }]) })
+                    menu_items: this.getAssignmentListFromJson(this.state.ungraded_assignment
+                    //            [
+                    //                {source:"", studentName:"Poh Puay Kai", assignmentName:"Algebra"}
+                    //            ]
+                    ) })
             )
         );
     }
@@ -70038,7 +70049,6 @@ var LoginPage = _react2.default.createClass({
     },
     changeRadioButton: function changeRadioButton(event, string) {
         this.setState({ persona: string });
-        console.log("signup login radio button : " + string);
     },
     submitForm: function submitForm() {
         var username = document.getElementById("user_input").value;
@@ -70289,6 +70299,7 @@ var NewAssignmentPage = _react2.default.createClass({
             t.props.displaySnackMessage("Your assignment has been saved!");
             document.getElementById("new_assignment_save_button_id").style.display = "block";
             document.getElementById("new_assignment_progress_circle_id").style.display = "none";
+            t.props.changePage("tutor_main");
         }, function (xhttp) {
             var msg = "";
             if (xhttp.responseContent == "KEY_NOT_A_TUTOR") {
@@ -70729,9 +70740,9 @@ var StudentMainPage = _react2.default.createClass({
                 ),
                 _react2.default.createElement(
                     _Tabs.Tab,
-                    { label: 'Marked Assignments' },
+                    { label: 'Completed Assignments' },
                     _react2.default.createElement(_list_components2.default, {
-                        default_empty_message: "You do not have any marked assignments to review.",
+                        default_empty_message: "You do not have any completed assignments to review.",
                         menu_items: this.getCompletedAssignmentsFromJson(this.state.completedAssignments) })
                 )
             )
@@ -70762,8 +70773,6 @@ var _Avatar2 = _interopRequireDefault(_Avatar);
 
 var _List = require('material-ui/List');
 
-var _List2 = _interopRequireDefault(_List);
-
 var _TextField = require('material-ui/TextField');
 
 var _TextField2 = _interopRequireDefault(_TextField);
@@ -70786,14 +70795,21 @@ var TutorList = _react2.default.createClass({
     displayName: 'TutorList',
 
     getInitialState: function getInitialState() {
-        return {};
+        return {
+            tutor_list: []
+        };
     },
     getTutorListFromJson: function getTutorListFromJson(jsonList) {
         return jsonList.map(function (jsonOb) {
-            return _react2.default.createElement(_List2.default, {
+            return _react2.default.createElement(_List.ListItem, {
                 leftAvatar: _react2.default.createElement(_Avatar2.default, { src: jsonOb.source }),
                 primaryText: jsonOb.name });
         });
+    },
+    fetchTutorList: function fetchTutorList() {
+        this.sendInfo("GET", "/tuition/get_tutors/", {}, function (xhttp) {
+            console.log("fetch tutor list i");
+        }, function (xhttp) {});
     },
     render: function render() {
         var style = {
@@ -70860,7 +70876,7 @@ var TutorList = _react2.default.createClass({
                 'div',
                 { style: style },
                 _react2.default.createElement(_list_components2.default, {
-                    menu_items: this.getTutorListFromJson([{ source: "", name: "Maurice Chng" }]) })
+                    menu_items: this.getTutorListFromJson(this.state.tutor_list) })
             )
         );
     }
@@ -70966,7 +70982,7 @@ var TutorMainPage = _react2.default.createClass({
     getAssignmentListFromJson: function getAssignmentListFromJson(jsonList) {
         return jsonList.map(function (jsonOb) {
             return _react2.default.createElement(_List.ListItem, {
-                primaryText: jsonOb.name,
+                primaryText: jsonOb.assignment__name,
                 secondaryText: _react2.default.createElement(
                     'p',
                     null,
@@ -71012,11 +71028,7 @@ var TutorMainPage = _react2.default.createClass({
                     { label: 'Assignments' },
                     _react2.default.createElement(_list_components2.default, {
                         default_empty_message: "You have not created any assignments yet.",
-                        menu_items: this.getAssignmentListFromJson(
-                        //                [
-                        //                {name:"Simultaneous Equation 1", dueDate:"", totalCompleted:"0"}
-                        //                ]
-                        this.state.assignmentList)
+                        menu_items: this.getAssignmentListFromJson(this.state.assignmentList)
                     })
                 ),
                 _react2.default.createElement(
@@ -71024,11 +71036,7 @@ var TutorMainPage = _react2.default.createClass({
                     { label: 'Students' },
                     _react2.default.createElement(_list_components2.default, {
                         default_empty_message: "You do have any students yet.",
-                        menu_items: this.getStudentListFromJson(
-                        //            [
-                        //            {source:"", name:"Brendan Lim", totalScore:"10"}
-                        //            ]
-                        this.state.studentList) })
+                        menu_items: this.getStudentListFromJson(this.state.studentList) })
                 )
             )
         );

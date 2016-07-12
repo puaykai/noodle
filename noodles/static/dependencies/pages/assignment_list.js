@@ -10,7 +10,9 @@ import RaisedButton from 'material-ui/RaisedButton';
 
 var AssignmentsList = React.createClass({
     getInitialState: function(){
-        return {};
+        return {
+            ungraded_assignment:[]
+        };
     },
     componentWillMount:function(){
         var assignmentList = [];
@@ -20,7 +22,18 @@ var AssignmentsList = React.createClass({
             "/tuition/get_ungraded_assignment/",
             {},
             function(xhttp){
-                console.log("repsonseText : " + xhttp.responseText);
+                var ungraded_assignment = [];
+                var a = JSON.parse(xhttp.responseText);
+                for (var i=0; i<a.length; i++) {
+                    var b = {};
+                    b['assignment_id'] = a[i].assignment__id;
+                    b['assignment_name'] = a[i].assignment__name;
+                    b['student_id'] = a[i].student__id;
+                    b['student_name'] = a[i].student__user__username;
+                    b['avatar'] = a[i].student__user__profile__avatar;
+                    ungraded_assignment.push(b);
+                }
+                t.setState({'ungraded_assignment':ungraded_assignment});
             },
             function(xhttp){
                 if (xhttp.responseText == "KEY_BAD_REQUEST") {
@@ -46,23 +59,26 @@ var AssignmentsList = React.createClass({
             this.props.changePage("assignment");
         };
         return (jsonList.map(function(jsonOb){
+            var gradeAssignment = function(){
+                console.log("going to assignment " + jsonOb.assignment_id + " / student " + jsonOb.student_id);
+                t.props.changePage("assignment", {
+                    "assignment_id":jsonOb.assignment_id,
+                    "student_id":jsonOb.student_id
+                });
+            };
             return (
                 <ListItem
-                    leftAvatar={<Avatar src={jsonOb.source}/>}
-                    primaryText={jsonOb.studentName}
+                    leftAvatar={<Avatar src={jsonOb.avatar}/>}
+                    primaryText={jsonOb.student_name}
                     secondaryText={
                     <div>
                         <p>
-                            <span>{jsonOb.assignmentName}</span>
+                            <span>{jsonOb.assignment_name}</span>
                         </p>
-                        <div>
-                            <RaisedButton
-                                label="Grade"
-                                onClick={grade_assignment}/>
-                        </div>
                     </div>
                     }
-                    secondaryTextLines={2}/>
+                    secondaryTextLines={2}
+                    onClick={gradeAssignment}/>
             );
         }));
     },
@@ -90,9 +106,9 @@ var AssignmentsList = React.createClass({
         <GenericList
             default_empty_message="You have no assignments"
             menu_items={
-            this.getAssignmentListFromJson([
-                {source:"", studentName:"Poh Puay Kai", assignmentName:"Algebra"}
-            ])}/>
+            this.getAssignmentListFromJson(
+            this.state.ungraded_assignment
+            )}/>
         </div>
         </div>);
     }
