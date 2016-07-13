@@ -74,7 +74,7 @@ def new_assignment(request):
 
 @login_required
 def get_assignment(request):
-    if request.method == "POST" and request.body: # TODO check if either a
+    if request.method == "POST" and request.body:
         request.POST = loads(request.body)
         return HttpResponse(Assignment.get_assignment(request.POST.get("assignment_id")), status=200)
     else:
@@ -111,7 +111,7 @@ def grade_assignment(request):
         except:
             return HttpResponse("KEY_YOU_ARE_NOT_TUTOR", status=400)
         request.POST = loads(request.body)
-        if "questions" in request.POST and "assignment_id" in request.POST and "student_id" in request.POST:
+        if "answers" in request.POST and "assignment_id" in request.POST and "student_id" in request.POST:
             try:
                 assignment = Assignment.objects.get(id=request.POST.get("assignment_id"))
             except:
@@ -121,7 +121,7 @@ def grade_assignment(request):
             except:
                 return HttpResponse("KEY_NO_SUCH_STUDENT", status=400)
             if StudentAssignment.objects.filter(student=student, assignment=assignment).exists():
-                return HttpResponse(Assignment.grade(tutor, assignment, student, request.POST.get('questions')), status=200)
+                return HttpResponse(Assignment.grade(tutor, assignment, student, request.POST.get('answers')), status=200)
             else:
                 return HttpResponse("KEY_STUDENT_DOES_NOT_HAVE_ASSIGNMENT", status=400)
         else:
@@ -177,7 +177,6 @@ def get_completed_assignments(request):
             student = Student.objects.get(user=request.user)
         except:
             return HttpResponse("KEY_USER_IS_NOT_A_STUDENT", status=400)
-        print "completed assignments : %s " % Student.get_completed_assignments(student)
         return HttpResponse(Student.get_completed_assignments(student), status=200)
     else:
         return HttpResponse("KEY_BAD_RESPONSE", status=400)

@@ -149,9 +149,9 @@ var StudentMainPage = React.createClass({
             default_empty_message={"You do not have any due assignments to do."}
             menu_items={this.getDueAssignmentsFromJson(this.state.dueAssignments)}/>
     </Tab>
-    <Tab label="Completed Assignments" >
+    <Tab label="Marked Assignments" >
         <GenericList
-            default_empty_message={"You do not have any completed assignments to review."}
+            default_empty_message={"You do not have any marked assignments to review."}
             menu_items={this.getCompletedAssignmentsFromJson(this.state.completedAssignments)}/>
     </Tab>
   </Tabs>

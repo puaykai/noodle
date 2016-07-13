@@ -19,7 +19,8 @@ var Assignment = React.createClass({
             currentPage:null,
             openDialog:false,
             canNavigate:false,
-            nextNavigatePage:""
+            nextNavigatePage:"",
+            pageState:"REVIEW"
         };
     },
     handleOpenDialog:function(){
@@ -34,13 +35,12 @@ var Assignment = React.createClass({
             "assignment_id":this.props.pageParams.assignment_id,
             "answers":[]
         };
-        if (props.pageParams.student_id != null) {
+        if (this.props.pageParams.student_id != null) {
             a['student_id'] = this.props.pageParams.student_id;
         }
-        var sample_question = this.state.questions[0];
-        if(sample_question.isAnswered && sample_question.isGraded) { // TODO not implemented in this version
+        if(this.state.pageState == "REVIEW") { // TODO not implemented in this version
 
-        } else if(sample_question.isAnswered) { //grading question
+        } else if(this.state.pageState == "GRADE") { //grading question
             for(var i=0; i<this.state.questions.length; i++) {
                 var question = this.state.questions[i];
                 a.answers.push({
@@ -53,7 +53,7 @@ var Assignment = React.createClass({
             var t = this;
             this.props.sendInfo(
                 "POST",
-                "/tuition/grade_assignment",
+                "/tuition/grade_assignment/",
                 a,
                 function(xhttp){
                     console.log("grade assignment return : " + xhttp.responseText);
@@ -123,6 +123,7 @@ var Assignment = React.createClass({
     componentWillMount: function(){
             console.log("ASSIGNMENT : " + this.props.pageParams.assignment_id);
             var t = this;
+            var page_state = "REVIEW"; //states are either REVIEW, GRADE, DO
             this.props.sendInfo(
                 "POST",
                 "/tuition/get_assignment/",
@@ -139,26 +140,31 @@ var Assignment = React.createClass({
                         a['id'] = r[i]['questions__id'];
                         a['question'] = r[i]['questions__content'];
                         a['maxScore'] = r[i]['questions__maximum_grade'];
-                        console.log("question : " + q['question'] + " maxScore : " + q['maxScore']);
-                        if (r[i]['questions__answer__graded'] == null && r[i]['questions__answer__content'] == null) {
+                        console.log(JSON.stringify(r[i]));
+                        console.log("question : " + a['question'] + " maxScore : " + a['maxScore'] + " isGraded : " + r[i]['questions__answer__graded']);
+                        if (r[i]['questions__answer__graded'] == false && r[i]['questions__answer__content'] == "") {
                             a['isGraded'] = false;
                             a['isAnswered'] = false;
-                        } else if (r[i]['questions__answer__graded'] == null) {
+                            page_state = "DO";
+                        } else if (r[i]['questions__answer__graded'] == false) {
                             a['isAnswered'] = true;
                             a['isGraded'] = false;
                             a['answer'] = r[i]['questions__answer__content'];
+                            page_state = "GRADE";
                         } else {
                             a['isAnswered'] = true;
                             a['isGraded'] = true;
                             a['answer'] = r[i]['questions__answer__content'];
                             a['score'] = r[i]['questions__answer__grade'];
                             a['comment'] = r[i]['questions__answer__comment'];
+                            page_state = "REVIEW";
                         }
                         q.push(a);
                     }
                     t.setState({
                         questions:q,
-                        currentPage:t.getObjectFromJson(q[0], 0)
+                        currentPage:t.getObjectFromJson(q[0], 0),
+                        pageState:page_state
                     });
                 },
                 function(xhttp){
@@ -208,22 +214,28 @@ var Assignment = React.createClass({
             var content_id = "editableContent-"+pageNum;
             var secondPart=(
                 <div>
-                <h4>Comment:</h4>
                     <div>
                         <TextField
+                            id={"grade"+content_id}
                             hintText={hintText}
                             floatingLabelText="Enter score"
                             floatingLabelFixed={true}
+                            value={json.grade}
                         />
                     </div>
+                <h4>Comment:</h4>
                     <div>
-
                         <div id={content_id} ref={
                             function(input){
                                 if(input != null) { //TODO put grade and comment on this question
-                                    AlloyEditor.editable(input.id, {
-                                        container: 'editable'
-                                    });
+                                    document.getElementById(input.id).innerHTML = t.state.questions[t.state.currentPageNum].comment;
+                                    try{
+                                        AlloyEditor.editable(input.id, {
+                                            container: 'editable'
+                                        });
+                                    } catch (err) {
+                                        console.log(err);
+                                    }
                                 }
                             }
                         }>
@@ -291,7 +303,12 @@ var Assignment = React.createClass({
         // TODO if tutor , then save grades and comments
         // TODO if student , then save answer
         //Save the answer and set new answer
-        this.state.questions[this.state.currentPageNum].answer = document.getElementById("editableContent-"+this.state.currentPageNum).innerHTML;
+        if (this.state.pageState == "DO") {
+            this.state.questions[this.state.currentPageNum].answer = document.getElementById("editableContent-"+this.state.currentPageNum).innerHTML;
+        } else if (this.state.pageState == "GRADE") {
+            this.state.questions[this.state.currentPageNum].comment = document.getElementById("editableContent-"+this.state.currentPageNum).innerHTML;
+            this.state.questions[this.state.currentPageNum].grade = document.getElementById("gradeeditableContent-"+this.state.currentPageNum).value;
+        }
         var nextPageNumber = (this.state.currentPageNum + 1) % this.state.questions.length;
         var nextQuestion = this.getObjectFromJson(this.state.questions[nextPageNumber], nextPageNumber);
         this.setState({
@@ -316,17 +333,29 @@ var Assignment = React.createClass({
         onTouchTap={this.handleCloseDialogPositive}
       />,
     ];
+    var dialogTitle = "";
+    var dialogMessage = "";
+    if (this.state.pageState == "REVIEW") {
+        dialogTitle = "";
+        dialogMessage = "";
+    } else if (this.state.pageState == "DO") {
+        dialogTitle = "Confirm Navigate Away?";
+        dialogMessage = "Navigating away will submit this assignment as your final answer. Are you sure?";
+    } else if (this.state.pageState == "GRADE") {
+        dialogTitle = "Confirm Navigate Away?";
+        dialogMessage = "Navigating away will fix this as final grade and comments. Are you sure?";
+    }
         console.log("current page number on render : " + this.state.currentPageNum);
         return (<div>
               <div>
                 <Dialog
-                  title="Confirm Navigate Away?"
+                  title={dialogTitle}
                   actions={actions}
                   modal={true}
                   open={this.state.openDialog}
                   onRequestClose={this.handleCloseDialogNegative}
                 >
-                  Navigating away will submit this assignment as your final answer. Are you sure?
+                  {dialogMessage}
                 </Dialog>
               </div>
         {this.state.currentPage}

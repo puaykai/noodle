@@ -12,16 +12,16 @@ class Question(models.Model):
     content = models.TextField(default="")
     maximum_grade = models.IntegerField(default=0)
 
-
-
 class TutorAssignment(models.Model):
     DRAFT = 'DR'
     READY = 'RE'
+    DONE = 'DO'
     GRADED = 'GR'
     CANCELLED = 'CA'
     ASSIGNMENT_STATE = (
         (DRAFT, 'draft'),
         (READY, 'ready'),
+        (DONE, 'done'),
         (GRADED, 'graded'),
         (CANCELLED, 'cancelled')
     )
@@ -33,10 +33,12 @@ class TutorAssignment(models.Model):
 class StudentAssignment(models.Model):
     UNCOMPLETED = 'UN'
     DONE = 'DO'
+    GRADED = "GR"
     REVIEWED = 'RE'
     ASSIGNMENT_STATE = (
         (UNCOMPLETED, 'uncompleted'),
         (DONE, 'done'),
+        (GRADED, 'graded'),
         (REVIEWED, 'ready')
     )
     state = models.CharField(max_length=2, choices=ASSIGNMENT_STATE, default=UNCOMPLETED)
@@ -119,16 +121,17 @@ class Assignment(models.Model):
     @classmethod
     def grade(cls, tutor, assignment, student, questions_dictionary):
         for question_dictionary in questions_dictionary:# {question_id, grade, comment}
-            question = assignment.question.get(id=question_dictionary.get("question_id"))
+            question = assignment.questions.get(id=question_dictionary.get("question_id"))
             answers = Answer.objects.filter(question=question, graded=False)
             for answer in answers.iterator():
                 answer.grade = question_dictionary.get("grade")
-                answer.comment = question.dictionary.get("comment")
+                answer.comment = question_dictionary.get("comment")
                 answer.save()
         assignment.save()
         try:
-            ta = TutorAssignment.objects.get(tutor=tutor, assignment=assignment)
-            ta.state = TutorAssignment.GRADED
+            sa = StudentAssignment.objects.get(student=student, assignment=assignment)
+            sa.state = StudentAssignment.GRADED
+            sa.save()
         except:
             return False
         return True
@@ -153,10 +156,7 @@ class Student(models.Model):
 
     @classmethod
     def get_completed_assignments(cls, student):
-        # return serializers.serialize('json', student.assignments.filter(type="GR"))
-        # return dumps(list(student.assignments.filter(type="GR")
-        #                   .values('id', 'name')))
-        return dumps(list(Assignment.objects.filter(studentassignment__student=student, studentassignment__state=StudentAssignment.DONE)
+        return dumps(list(Assignment.objects.filter(studentassignment__student=student, studentassignment__state=StudentAssignment.GRADED)
                           .values('id', 'name', 'due_date')), cls=MyEncoder) # TODO filter by join table
 
 
